@@ -113,5 +113,76 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>dnt</id>
+            <repositories>
+                <repository>
+                    <id>dnt-releases</id>
+                    <url>http://nexus.dnt.com.cn/nexus/content/groups/public</url>
+                </repository>
+
+                <repository>
+                    <id>dnt-snapshots</id>
+                    <url>http://nexus.dnt.net.cn/nexus/content/groups/public-snapshots/</url>
+                </repository>
+
+            </repositories>
+
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>dnt-releases</id>
+                    <url>http://nexus.dnt.com.cn/nexus/content/groups/public</url>
+                </pluginRepository>
+            </pluginRepositories>
+
+            <distributionManagement>
+                <repository>
+                    <id>dnt-releases</id>
+                    <name>Nexus Release Repository</name>
+                    <url>http://nexus.dnt.com.cn/nexus/content/repositories/releases</url>
+                </repository>
+                <snapshotRepository>
+                    <id>dnt-snapshots</id>
+                    <name>Nexus Snapshot Repository</name>
+                    <url>http://nexus.dnt.com.cn/nexus/content/repositories/snapshots</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+
+        <profile>
+            <id>kadvin</id>
+            <repositories>
+                <repository>
+                    <id>kadvin-releases</id>
+                    <url>http://nexus.kadvin.com/content/groups/public</url>
+                </repository>
+
+            </repositories>
+
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>kadvin-releases</id>
+                    <url>http://nexus.kadvin.com/content/groups/public</url>
+                </pluginRepository>
+            </pluginRepositories>
+
+            <distributionManagement>
+                <repository>
+                    <id>kadvin-releases</id>
+                    <name>Nexus Release Repository</name>
+                    <url>http://nexus.kadvin.com/content/repositories/releases</url>
+                </repository>
+                <snapshotRepository>
+                    <id>kadvin-snapshots</id>
+                    <name>Nexus Snapshot Repository</name>
+                    <url>http://nexus.kadvin.com/content/repositories/snapshots</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+
+    </profiles>
+
 </project>
 
