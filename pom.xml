@@ -1,0 +1,117 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>spring.component</groupId>
+    <artifactId>framework</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <name>Spring Component Framework</name>
+    <url>http://www.happponroad.net/spring-component-framework</url>
+
+    <properties>
+        <version.plexus>2.4.2</version.plexus>
+        <version.xstream>1.4.4</version.xstream>
+        <version.slf4j>1.7.5</version.slf4j>
+        <version.springframework>3.2.4.RELEASE</version.springframework>
+        <version.logback>1.0.13</version.logback>
+        <version.commons.lang>2.6</version.commons.lang>
+        <version.commons.collections>3.2.1</version.commons.collections>
+        <version.commons.beanutils>1.8.0</version.commons.beanutils>
+        <version.commons.io>2.4</version.commons.io>
+    </properties>
+
+    <scm>
+        <connection>scm:git:https://github.com/Kadvin/spring-component-framework.git</connection>
+        <developerConnection>scm:git:https://github.com/Kadvin/spring-component-framework.git</developerConnection>
+    </scm>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.codehaus.plexus</groupId>
+            <artifactId>plexus-classworlds</artifactId>
+            <version>${version.plexus}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>${version.xstream}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${version.slf4j}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${version.springframework}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+            <version>${version.springframework}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${version.springframework}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>${version.commons.lang}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant</artifactId>
+            <version>1.9.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathLayoutType>custom</classpathLayoutType>
+                            <customClasspathLayout>
+                                ../lib/$${artifact.groupId}.$${artifact.artifactId}-$${artifact.version}.jar
+                            </customClasspathLayout>
+                        </manifest>
+                        <manifestEntries>
+                            <Main-Class>spring.component.container.AppLauncher</Main-Class>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
