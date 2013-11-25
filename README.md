@@ -3,25 +3,24 @@ spring-component-framework
 
 A new component framework based on spring, maven, which can keep your java application consistent between develop time and runtime.
 
-Someone maybe doubt about, why there is another more wheel about component/plugin framework? There is OSGi framework already, and there is a Spring DM server as application server even.
+Someone maybe doubt about, why there is another more wheel about component/plugin framework? There is OSGi framework already, and Spring DM server as application server even.
 
 I'v tried to integrate those excellent opensource products in my app, but I found I'm stucked in OSGi terrable complexicity, especially integrated with my familar tools, such as IDE(Intellij), repository managment(Maven).
 
-I think OSGi's complexity comes from runtime dynamic ability, it's try to create a person who can cut off his leg and replace with another brand new one.
+I think OSGi's complexity comes from runtime dynamic ability, it try to help me create a person who can cut off his leg and replace with another new one.
 
-But I know my requiments clearly, I just want a simple clean app: I want it been component oriented, developer friendly, be consistent in anytime from any aspects.
+But I don't want so powerful and terrable man, I just need a normal man who can be borned, play and dead then.
+
+I want it been component oriented, developer friendly, be consistent in anytime from any aspects.
 
 So I tried to write the my products from user perspective:
 
-1. Start Easily
+1. Dependencies auto loaded
 ----------------
 
 ```bash
   java -jar path/to/my/app.jar arguments
 ```
-
-2. Dependencies auto loaded
----------------------------
 
 All dependencies of the app.jar should be imported automatically after developer declaired in development time.
 
@@ -42,18 +41,16 @@ Then we plan the app.jar should have a maven pom.xml declaired as:
   </dependencies>
 ```
 
-as you know, if we want the app.jar startable by java -jar, we should have a MANIFES.MF file declairs the Class-Path entry of this jar depends like those:
+as you know, if we want the app.jar startable by java -jar, it should contain a MANIFES.MF file declairs the Class-Path entry of this jar depends like those:
 
 ```properties
   Main-Class: my.app.Main
   Class-Path: path/to/spring-core-3.2.14.RELEASE.jar path/to/other-dependencies.jar
 ```
 
-But they are duplicate with pom.xml apparently, and we need create a special jar for every new app.
+But they are duplicate with pom.xml apparently, and we need create this special jar for every new app.
 
 so I decide to start the app.jar by another shared jar, it's our protagonist:
-
-it should be started as:
 
 ```bash
   java -jar spring.component.framework-0.0.1.jar path/to/my.app-1.0.0.jar
@@ -85,7 +82,7 @@ And they can be summaried as 3 categories below:
 
 ### 3.1 Static Component
 
-Static component should has a pom.xml which is the maven's pom file in META-INF
+Static component should contain a pom.xml which is the maven's pom file in META-INF
 and the framework will resolve dependencies from it.
 
 It's used to provide static class to other dependencies.
@@ -104,8 +101,11 @@ a simple static component looks like:
 
 ### 3.2 Application Component
 
-The application component should has an application.xml which is a spring application context file in META-INF besides pom.xml
+The application component should contain an application.xml which is a spring application context file in META-INF besides pom.xml
+
 and the framework will load this application context when start, unload the app context when stop vesa.
+
+It's used to start some live-beans which can provide some live-functions or interacts with each other in runtime.
 
 a simple application component looks like:
 
@@ -120,6 +120,7 @@ a simple application component looks like:
       |  |  |-Bean.class
 ```
 
+and the application.xml maybe looks like:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -137,7 +138,7 @@ a simple application component looks like:
 
 ### 3.3 Service Component
 
-One component can't be an application like one tree can't be a forest, we need several components work together, and we need they are separated in some way also.
+One component can't be an application like one tree can't be a forest, we need several components work together, and we want they are separated in some way also to reduce system complexity.
 
 So I make those rules:
 
@@ -146,6 +147,8 @@ So I make those rules:
 
 2. Rule B:
   If they want to interact with each other, they are not a simple application component, the are upgrade as "Service Component"
+
+  Service component is an application component with "service.xml" in META-INF.
 
 3. Rule C:
   If a service component want to contribute some beans to other jar, they should export them as "service"
@@ -167,12 +170,12 @@ So I make those rules:
 </service>
 ```
 
-the xml element <ref>testServiceProvider</ref> is refer to the bean in application context of this component.
+the xml element &lt;ref&gt;testServiceProvider&lt;/ref&gt; is refer to the bean in application context of this component.
 
 4. Rule D:
   If a service component want to use some beans provided by other jars, they should import them as "service".
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <service xmlns="http://www.happyonroad.net/schema/service"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -186,7 +189,7 @@ the xml element <ref>testServiceProvider</ref> is refer to the bean in applicati
 
 </service>
 ```
-the xml element <as>serviceProvider</as> make the imported service as a accessible bean by the application context of this component.
+the xml element &lt;as&gt;serviceProvider&lt;/as&gt; make the imported service as a accessible bean by the application context of this component.
 
 So the application the service component can use those imported service as local bean:
 
