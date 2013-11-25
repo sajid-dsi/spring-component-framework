@@ -1,15 +1,17 @@
 spring-component-framework
 ==========================
 
-A new component framework based on spring, maven, which can keep your java application consistent between development and run time.
+A new component framework based on spring, maven, which can keep your java application consistent between develop time and runtime.
 
-Someone will has doubt about, why there is another more wheel about component/plugin framework? there is OSGi as basic plugin framework, and Spring DM server as application server even.
+Someone maybe doubt about, why there is another more wheel about component/plugin framework? There is OSGi framework already, and there is a Spring DM server as application server even.
 
-I'v tried those excellent opensource products, but I found I'm stucked in OSGi terrable complexicity, especially integrated with my familar tools, such as IDE(Intellij), repository managment(Maven).
+I'v tried to integrate those excellent opensource products in my app, but I found I'm stucked in OSGi terrable complexicity, especially integrated with my familar tools, such as IDE(Intellij), repository managment(Maven).
 
-But I know my requiments clearly, I want to my java delivery be component oriented, developer friendly, consistent.
+I think OSGi's complexity comes from runtime dynamic ability, it's try to create a person who can cut off his leg and replace with another brand new one.
 
-So I tried to write the my products as those:
+But I know my requiments clearly, I just want a simple clean app: I want it been component oriented, developer friendly, be consistent in anytime from any aspects.
+
+So I tried to write the my products from user perspective:
 
 1. Start Easily
 ----------------
@@ -21,11 +23,11 @@ So I tried to write the my products as those:
 2. Dependencies auto loaded
 ---------------------------
 
-All dependencies of the app should be imported automatically after developer declaired in development time.
+All dependencies of the app.jar should be imported automatically after developer declaired in development time.
 
-So I choose maven as dependencies management tool.
+Because most of java developers use Maven as dependencies management tool, so do I.
 
-the app.jar should have a maven pom.xml declair as:
+Then we plan the app.jar should have a maven pom.xml declaired as:
 
 ```xml
   <dependencies>
@@ -34,12 +36,22 @@ the app.jar should have a maven pom.xml declair as:
       <artifactId>spring-core</artifactId>
       <version>3.2.14.RELEASE</version>
     </depency>
+    <depency>
+      <!--other more dependencies-->
+    </depency>
   </dependencies>
 ```
 
-as you know, if we want achive this approach, we should have a MANIFES.MF file declairs the lib of this jar depends.
+as you know, if we want the app.jar startable by java -jar, we should have a MANIFES.MF file declairs the Class-Path entry of this jar depends like those:
 
-so I decide do not resolve these dependencies by the app.jar(that means all app.jar should be coded) and all the jars should be named as: $groupId.$artifactId-$version.jar
+```properties
+  Main-Class: my.app.Main
+  Class-Path: path/to/spring-core-3.2.14.RELEASE.jar path/to/other-dependencies.jar
+```
+
+But they are duplicate with pom.xml apparently, and we need create a special jar for every new app.
+
+so I decide to start the app.jar by another shared jar, it's our protagonist:
 
 it should be started as:
 
@@ -47,9 +59,9 @@ it should be started as:
   java -jar spring.component.framework-0.0.1.jar path/to/my.app-1.0.0.jar
 ```
 
-and the spring component framework jar will resolve the dependencies for the my.app-1.0.0.jar
+and the spring component framework jar will resolve the dependencies for the my.app-1.0.0.jar by resolving the pom.xml
 
-in order to decouple the application with maven repository in runtime, the application should be deployed with all depended jars as:
+In order to decouple the application with maven repository in runtime, the application should be deployed with all depended jars as below:
 
 ```
   path/to/app
@@ -67,12 +79,16 @@ in order to decouple the application with maven repository in runtime, the appli
 3. Component oriented
 ----------------------
 
-We should treat every standalone jar as a potential component, but the real component should follow those rules:
+We think a component is a sealed-jar first.
+
+And they can be summaried as 3 categories below:
 
 ### 3.1 Static Component
 
-the jar should has a pom.xml which is the maven's pom file in META-INF
-and the framework will resolve dependencies for it.
+Static component should has a pom.xml which is the maven's pom file in META-INF
+and the framework will resolve dependencies from it.
+
+It's used to provide static class to other dependencies.
 
 a simple static component looks like:
 
@@ -88,8 +104,8 @@ a simple static component looks like:
 
 ### 3.2 Application Component
 
-the jar should has an application.xml which is a spring application context file in META-INF besides pom.xml
-and the framework will load this application context.
+The application component should has an application.xml which is a spring application context file in META-INF besides pom.xml
+and the framework will load this application context when start, unload the app context when stop vesa.
 
 a simple application component looks like:
 
@@ -121,18 +137,18 @@ a simple application component looks like:
 
 ### 3.3 Service Component
 
-One jar can't be an application like one tree can't be a forest, we need several jars work togher, but we need the are separated in some way also.
+One component can't be an application like one tree can't be a forest, we need several components work together, and we need they are separated in some way also.
 
 So I make those rules:
 
 1. Rule A:
-  Application components are standalone from each other, that is to say, Jar A's application context shouldn't access Jar B's application in any way and any time.
+  Application components are standalone from each other, that is to say, Jar A's application context shouldn't access Jar B's application context in any time, by any way.
 
 2. Rule B:
-  If they want to interact with each other, they are not a simple static component, the are upgrade to "Service Component"
+  If they want to interact with each other, they are not a simple application component, the are upgrade as "Service Component"
 
 3. Rule C:
-  If a service component want to contribute some beans to other jar, the should export them as "service"
+  If a service component want to contribute some beans to other jar, they should export them as "service"
   such as:
 
 ```xml
@@ -151,6 +167,8 @@ So I make those rules:
 </service>
 ```
 
+the xml element <ref>testServiceProvider</ref> is refer to the bean in application context of this component.
+
 4. Rule D:
   If a service component want to use some beans provided by other jars, they should import them as "service".
 
@@ -168,6 +186,7 @@ So I make those rules:
 
 </service>
 ```
+the xml element <as>serviceProvider</as> make the imported service as a accessible bean by the application context of this component.
 
 So the application the service component can use those imported service as local bean:
 
