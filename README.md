@@ -11,52 +11,130 @@ It can help you decouple your application into several components cleanly.
 2. Usage
 ----------
 
-If you are developing a new application, you can:
+2.1 Given you have a distributed application which contains two parts: server and client, 
+and your have separated the project into several logic parts, such as:
 
-Download the [spring-component-framework](http://www.happyonroad.net/spring-component-framework/latest.jar)
+1. com.myapp.api
+  Define the api between the server and client
+2. com.myapp.basis
+  Provide some basic services which can be deployed and used in client or server runtime.
+3. com.myapp.server
+  The server runtime part.
+4. com.myapp.client
+  The client runtime part.
 
-Ensure you have jdk 1.6 above
+2.2 Develop my app
 
-open your shell/command line and execute:
-  
-```bash
-  java -jar net.happyonroad.spring-component-framework-1.0.0.jar --create com.example.MainApp --version 1.0.0
+1. We treat the api as a static component, that is to say, it just provide static content to be used by others.
+
+2. We treat the basis as an application component, which will fork some beans in runtime.
+
+3. We treat the server and client as a service component ,which will not only create some beans, depends some other services but also in runtime.
+
+2.3 Maven poms
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
+
+    <groupId>com.myapp</groupId>
+    <artifactId>root</artifactId>
+    <version>0.0.1</version>
+
+    <name>My app</name>
+    <modules>
+        <module>api</module>
+        <module>basic</module>
+        <module>server</module>
+        <module>client</module>
+    </modules>
+</project>
+```
+the api sub project pom:
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.myapp</groupId>
+        <artifactId>root</artifactId>
+        <version>0.0.1</version>
+    </parent>
+    <artifactId>api</artifactId>
+    <name>My App API</name>
+</project>
+```
+the basis sub project pom:
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.myapp</groupId>
+        <artifactId>root</artifactId>
+        <version>0.0.1</version>
+    </parent>
+    <artifactId>basis</artifactId>
+    <name>My App Basis</name>
+</project>
 ```
 
-Then you will see a new folder like:
+the server sub project pom:
 
-```
-  path/to/com.example.MainApp-1.0.0
-    |-pom.xml
-    |-src
-    |  |-main
-    |  |  |-java
-    |  |  |  |-com
-    |  |  |  |  |-example
-    |  |  |  |  |  |-MainApp.java
-    |  |  |-resources
-    |  |-test
-    |  |  |-java
-    |  |  |  |-com
-    |  |  |  |  |-example
-    |  |  |  |  |  |-MainAppTest.java
-    |  |  |-resources
-    |-release
-    |  |-bin
-    |  |  |-start.bat
-    |  |  |-stop.bat
-    |  |  |-start.sh
-    |  |  |-stop.sh
-    |  |-config
-    |  |  |-logback.xml
-    |  |-boot
-    |  |-lib
-    |  |-repository
-    |  |-logs
-    |  |-tmp
-```
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.myapp</groupId>
+        <artifactId>root</artifactId>
+        <version>0.0.1</version>
+    </parent>
+    <artifactId>server</artifactId>
+    <name>My App Server</name>
 
-If you are porting a legacy project to this component/plugin framework, you can add spring-component-framework as runtime dependency in your pom.xml
+    <dependencies>
+      <dependency>
+        <groupId>com.myapp</groupId>
+        <artifactId>api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.myapp</groupId>
+        <artifactId>basis</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+</project>
+```
+the client sub project pom:
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.myapp</groupId>
+        <artifactId>root</artifactId>
+        <version>0.0.1</version>
+    </parent>
+    <artifactId>client</artifactId>
+    <name>My App Client</name>
+
+    <dependencies>
+      <dependency>
+        <groupId>com.myapp</groupId>
+        <artifactId>api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.myapp</groupId>
+        <artifactId>basis</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+</project>
+
+You can add spring-component-framework as runtime dependency to the two real runtime project's pom(client and server)
 
 ```xml
 <dependencies>
@@ -69,7 +147,7 @@ If you are porting a legacy project to this component/plugin framework, you can 
 </dependencies>
 ```
 
-and you should add a plugin to package your app:
+and you need add a customized plugin to package the client/server app:
 
 ```xml
   <build>
@@ -84,7 +162,7 @@ and you should add a plugin to package your app:
             <phase>package</phase>
             <goals><goal>run</goal></goals>
             <configuration>
-              <outputDirectory>path/to/release</outputDirectory>
+              <outputDirectory>path/to/${project.artifactId}</outputDirectory>
             </configuration>
           </execution>
         </executions>
@@ -93,7 +171,7 @@ and you should add a plugin to package your app:
   </build>
 ```
 
-when you execute such commands in your project root:
+when you execute such commands in the project root:
 
 ```bash
 mvn package
@@ -102,7 +180,7 @@ mvn package
 you should saw your app is build like below:
 
 ```
-    path/to/release
+  path/to/server
     |  |-bin
     |  |  |-start.bat
     |  |  |-stop.bat
@@ -111,12 +189,39 @@ you should saw your app is build like below:
     |  |-config
     |  |  |-logback.xml
     |  |-boot
+    |  |  |-net.happyonroad.spring-component-framework-0.0.1.jar
     |  |-lib
-    |  |-repository
+    |  |  |-com.myapp.server-0.0.1.jar
+    |  |  |-com.myapp.api-0.0.1.jar
+    |  |  |-com.myapp.basis-0.0.1.jar
+    |  |  |-org.springframework.spring-beans-3.2.14.RELEASE.jar
+    |  |  |-<other depended jars>
+    |  |-logs
+    |  |-tmp
+
+  path/to/client
+    |  |-bin
+    |  |  |-start.bat
+    |  |  |-stop.bat
+    |  |  |-start.sh
+    |  |  |-stop.sh
+    |  |-config
+    |  |  |-logback.xml
+    |  |-boot
+    |  |  |-net.happyonroad.spring-component-framework-0.0.1.jar
+    |  |-lib
+    |  |  |-com.myapp.client-0.0.1.jar
+    |  |  |-com.myapp.api-0.0.1.jar
+    |  |  |-com.myapp.basis-0.0.1.jar
+    |  |  |-org.springframework.spring-beans-3.2.14.RELEASE.jar
+    |  |  |-<other depended jars>
     |  |-logs
     |  |-tmp
 
 ```
+
+and your client and server is ready for start or stop by corresponding start/stop (bat|sh) file.
+
 
 3. Technologies
 ---------------
