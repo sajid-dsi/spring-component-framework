@@ -1,9 +1,131 @@
 spring-component-framework
 ==========================
 
+1. Scenario
+-----------
+
+The spring component framework is used to setup a standalone application which is based on SpringFramework.
+
+It can help you decouple your application into several components cleanly.
+
+2. Usage
+----------
+
+If you are developing a new application, you can:
+
+Download the [spring-component-framework](http://www.happyonroad.net/spring-component-framework/latest.jar)
+
+Ensure you have jdk 1.6 above
+
+open your shell/command line and execute:
+  
+```bash
+  java -jar net.happyonroad.spring-component-framework-1.0.0.jar --create com.example.MainApp --version 1.0.0
+```
+
+Then you will see a new folder like:
+
+```
+  path/to/com.example.MainApp-1.0.0
+    |-pom.xml
+    |-src
+    |  |-main
+    |  |  |-java
+    |  |  |  |-com
+    |  |  |  |  |-example
+    |  |  |  |  |  |-MainApp.java
+    |  |  |-resources
+    |  |-test
+    |  |  |-java
+    |  |  |  |-com
+    |  |  |  |  |-example
+    |  |  |  |  |  |-MainAppTest.java
+    |  |  |-resources
+    |-release
+    |  |-bin
+    |  |  |-start.bat
+    |  |  |-stop.bat
+    |  |  |-start.sh
+    |  |  |-stop.sh
+    |  |-config
+    |  |  |-logback.xml
+    |  |-boot
+    |  |-lib
+    |  |-repository
+    |  |-logs
+    |  |-tmp
+```
+
+If you are porting a legacy project to this component/plugin framework, you can add spring-component-framework as runtime dependency in your pom.xml
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>net.happyonroad</groupId>
+    <artifactId>spring-component-framework</artifactId>
+    <version>0.0.1</version>
+    <scope>runtime</scope>
+  </dependency>
+</dependencies>
+```
+
+and you should add a plugin to package your app:
+
+```xml
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>net.happyonroad</groupId>
+        <artifactId>spring-component-builder</artifactId>
+        <version>0.0.1</version>
+        <executions>
+          <execution>
+            <id>package-app</id>
+            <phase>package</phase>
+            <goals><goal>run</goal></goals>
+            <configuration>
+              <outputDirectory>path/to/release</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+```
+
+when you execute such commands in your project root:
+
+```bash
+mvn package
+```
+
+you should saw your app is build like below:
+
+```
+    path/to/release
+    |  |-bin
+    |  |  |-start.bat
+    |  |  |-stop.bat
+    |  |  |-start.sh
+    |  |  |-stop.sh
+    |  |-config
+    |  |  |-logback.xml
+    |  |-boot
+    |  |-lib
+    |  |-repository
+    |  |-logs
+    |  |-tmp
+
+```
+
+3. Technologies
+---------------
+
 A new component framework based on spring, maven, which can keep your java application consistent between develop time and runtime.
 
 Someone maybe doubt about, why there is another more wheel about component/plugin framework? There is OSGi framework already, and Spring DM server as application server even.
+
+And springsource is developing a sub-project named as [spring-plugin](https://github.com/spring-projects/spring-plugin)
 
 I'v tried to integrate those excellent opensource products in my app, but I found I'm stucked in OSGi terrable complexicity, especially integrated with my familar tools, such as IDE(Intellij), repository managment(Maven).
 
