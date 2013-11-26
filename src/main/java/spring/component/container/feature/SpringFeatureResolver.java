@@ -15,7 +15,7 @@ import org.springframework.context.support.GenericXmlApplicationContext;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-/** Resolve the general spring application context*/
+/** Resolve the general spring application context */
 public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
     public SpringFeatureResolver(int priority) {
         super(priority);
@@ -37,7 +37,7 @@ public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
 
 
     protected void digDependedApplicationContext(Component component, Set<ApplicationContext> dependedContexts) {
-        Object loaded = resolveContext.getFeature(component, Features.APPLICATION_FEATURE );
+        Object loaded = resolveContext.getFeature(component, Features.APPLICATION_FEATURE);
         if (loaded != null && loaded instanceof ApplicationContext) {
             ApplicationContext componentContext = (ApplicationContext) loaded;
             dependedContexts.add(componentContext);
@@ -62,4 +62,17 @@ public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
         //将Component Repository也注册进去
         cbf.registerSingleton("componentRepository", resolveContext.getComponentRepository());
     }
+
+    @Override
+    public Object release(Component component) {
+        AbstractApplicationContext context = (AbstractApplicationContext) super.release(component);
+        if (context != null) {
+            context.stop();
+            context.close();
+        }else{
+            logger.error("Can't pick loaded {} feature for: {}", getName(), component);
+        }
+        return context;
+    }
+
 }

@@ -41,8 +41,8 @@ public class Features {
         map.put(name, feature);
     }
 
-    public void remove(String name) {
-        map.remove(name);
+    public Object remove(String name) {
+        return map.remove(name);
 
     }
 

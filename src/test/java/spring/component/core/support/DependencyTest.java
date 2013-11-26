@@ -4,7 +4,6 @@
 package spring.component.core.support;
 
 import junit.framework.TestCase;
-import spring.component.core.support.Dependency;
 
 /**
  * 测试Dependency对象

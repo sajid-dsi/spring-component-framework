@@ -82,5 +82,4 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
         return context;
     }
 
-
 }

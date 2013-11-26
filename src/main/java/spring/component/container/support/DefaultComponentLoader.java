@@ -187,11 +187,12 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     }
 
     @Override
-    public void removeFeature(Component component, String name) {
+    public Object removeFeature(Component component, String name) {
         Features features = loadedFeatures.get(component);
         if (features != null) {
-            features.remove(name);
+            return features.remove(name);
         }
+        return null;
     }
 
     /**
@@ -236,5 +237,6 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
                 resolver.release(component);
             }
         }
+        loadedFeatures.remove(component);
     }
 }

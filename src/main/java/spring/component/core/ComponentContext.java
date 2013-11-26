@@ -22,7 +22,7 @@ public interface ComponentContext {
      */
     void registerFeature(Component component, String name, Object feature);
 
-    void removeFeature(Component component, String name);
+    Object removeFeature(Component component, String name);
 
     ClassRealm getClassRealm(String componentId);
 

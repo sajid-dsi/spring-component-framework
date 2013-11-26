@@ -44,5 +44,5 @@ public interface FeatureResolver extends Comparable<FeatureResolver> {
      * 在特定的上下文中卸载/释放相应的组件
      * @param component 被卸载的组件
      */
-    void release(Component component) ;
+    Object release(Component component) ;
 }

@@ -6,6 +6,7 @@ package spring.component.container;
 import spring.component.classworld.PomClassRealm;
 import spring.component.classworld.PomClassWorld;
 import spring.component.container.support.DefaultLaunchEnvironment;
+import spring.component.container.support.ShutdownHook;
 import spring.component.core.Component;
 import org.codehaus.plexus.classworlds.launcher.ConfigurationException;
 import org.codehaus.plexus.classworlds.launcher.Launcher;
@@ -115,6 +116,7 @@ public class AppLauncher extends Launcher implements Executable {
             environment.load(this.mainComponent);
             logger.info(banner("Loaded  components starts from {}", this.mainComponent));
             exportAsRMI();
+            addShutdownHook();
             //让主线程基于STDIO接受交互命令
             //以后应该让CLI组件托管这块工作
             processCommands();
@@ -174,7 +176,11 @@ public class AppLauncher extends Launcher implements Executable {
         exporter.setService(this);
         exporter.afterPropertiesSet();
         //exporter.setBeanClassLoader(this.pomWorld.getMainRealm());
-        logger.info("Export Executable Service at rmi://localhost:{}/{}", servicePort , serviceName  );
+        logger.info(banner("Export Executable Service at rmi://localhost:{}/{}", servicePort , serviceName));
+    }
+
+    private void addShutdownHook() {
+       Runtime.getRuntime().addShutdownHook(new ShutdownHook(this));
     }
 
     /** 处理当前进程的命令行交互 */
