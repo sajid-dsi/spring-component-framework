@@ -1,7 +1,7 @@
 /**
  * @author XiongJie, Date: 13-10-29
  */
-package spring.test.api;
+package net.happyonroad.spring.test.api;
 
 /** 服务提供者 */
 public interface ServiceProvider {

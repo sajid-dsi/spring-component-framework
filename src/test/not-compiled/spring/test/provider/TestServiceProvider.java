@@ -1,9 +1,9 @@
 /**
  * @author XiongJie, Date: 13-10-29
  */
-package spring.test.provider;
+package net.happyonroad.spring.test.provider;
 
-import spring.test.api.ServiceProvider;
+import net.happyonroad.spring.test.api.ServiceProvider;
 import org.springframework.stereotype.Component;
 
 /** 测试的服务提供者 */
