@@ -6,9 +6,18 @@
     <version>0.0.1-SNAPSHOT</version>
 
     <name>Spring Component Framework</name>
-    <url>http://www.happponroad.net/spring-component-framework</url>
+    <url>http://github.com/Kadvin/spring-component-framework</url>
 
     <properties>
+        <version.maven.compiler>2.5.1</version.maven.compiler>
+        <version.maven.source>2.2.1</version.maven.source>
+        <version.maven.resources>2.6</version.maven.resources>
+        <version.maven.antrun>1.7</version.maven.antrun>
+        <version.maven.dependency>2.8</version.maven.dependency>
+        <version.maven.site>2.4</version.maven.site>
+        <version.maven.jar>2.4</version.maven.jar>
+        <version.maven.release>2.4.1</version.maven.release>
+
         <version.plexus>2.4.2</version.plexus>
         <version.xstream>1.4.4</version.xstream>
         <version.slf4j>1.7.5</version.slf4j>
@@ -93,7 +102,7 @@
             <version>${version.logback}</version>
         </dependency>
 
-        <!--引入这个的原因是要让Spring的Log能够正常输出(因为spring面向Commons Logging输出日志)-->
+        <!--Make the spring log redirect to SLF4J instead of Log4J)-->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
@@ -118,7 +127,38 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${version.maven.source}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${version.maven.compiler}</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                    <meminitial>128M</meminitial>
+                    <maxmem>512M</maxmem>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <compilerVersion>1.6</compilerVersion>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${version.maven.resources}</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>${version.maven.jar}</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -134,7 +174,79 @@
                     </archive>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>${version.maven.antrun}</version>
+                <executions>
+                    <execution>
+                        <id>copy-pom-xml</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <copy file="${project.basedir}/pom.xml" tofile="${project.basedir}/target/classes/META-INF/pom.xml" overwrite="true" />
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>${version.maven.release}</version>
+                <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <completionGoals>install</completionGoals>
+                </configuration>
+            </plugin>
+
         </plugins>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${version.maven.source}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${version.maven.compiler}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>${version.maven.antrun}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>${version.maven.dependency}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>${version.maven.site}</version>
+                    <configuration>
+                        <locales>zh_CN</locales>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${version.maven.jar}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>${version.maven.release}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
     </build>
 
     <profiles>
