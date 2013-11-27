@@ -588,9 +588,9 @@ I think OSGi's complexity comes from runtime dynamic ability, it try to help me 
 
 But I don't want a so powerful and terrible man, I just need a normal man who can be borned, play and dead then.
 
-About the spring-plugin, I have referred it when I finish this project, but I think we have different concerns, it seems to enhance the application in just one application context, based on one current application forms.
+About the spring-plugin, I have referred it when I finish this project, but I think we have different concerns, it seems to enhance the application in just one application context cross many jars, just like normal spring app does.
 
-That is to say, it take care about connectivity more than isolation in my opinion.
+That is to say, it take care about connectivity more than isolation (in my opinion).
 
 ```xml
 <beans xmlns="http://www.springframework.org/schema/beans"
