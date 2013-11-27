@@ -4,7 +4,7 @@ spring-component-framework
 1. Scenario
 -----------
 
-The spring component framework is used to setup a plugin based, micro-kernel, standalone(today, we will support webapp in later releases) application which is based on SpringFramework.
+The spring component framework is used to setup a plugin based, micro-kernel, standalone application(today, we will support webapp in later releases) which is based on SpringFramework.
 
 It can help you decouple your application into several components clearly with zero invasion
 and keep your application consistent between develop time and runtime.
@@ -15,8 +15,8 @@ and keep your application consistent between develop time and runtime.
 
 ### 2.1 Normal application
 
-Given you have a distributed application which contains two parts: server and client, 
-and your have separated this project into several modules:
+Given you want to develop a complex application contains two parts: server and client, 
+and your have separated it into several modules:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -25,7 +25,7 @@ and your have separated this project into several modules:
 
     <groupId>com.myapp</groupId>
     <artifactId>root</artifactId>
-    <version>0.0.1</version>
+    <version>1.0.0</version>
 
     <name>My app</name>
     <modules>
@@ -60,7 +60,9 @@ and your have separated this project into several modules:
      */
     Object perform(String job);
   }
+```
 
+```java
   /**
    * The Client API, used by server
    */
@@ -71,8 +73,11 @@ and your have separated this project into several modules:
     Object perform(String job);
   }
 
+```
+
+```java
   /**
-   * A shared service, which will be used by server and client both
+   * A shared service, which will be used by server
    */
   public interface CacheService{
     boolean store(String key, Object value);
@@ -88,7 +93,7 @@ and the pom of api:
     <parent>
         <groupId>com.myapp</groupId>
         <artifactId>root</artifactId>
-        <version>0.0.1</version>
+        <version>1.0.0</version>
     </parent>
     <artifactId>api</artifactId>
     <name>My App API</name>
@@ -119,7 +124,7 @@ and the pom of client looks like:
     <parent>
         <groupId>com.myapp</groupId>
         <artifactId>root</artifactId>
-        <version>0.0.1</version>
+        <version>1.0.0</version>
     </parent>
     <artifactId>client</artifactId>
     <name>My App Client</name>
@@ -136,7 +141,7 @@ and the pom of client looks like:
 
 #### 3. com.myapp.basis
 
-  Provide some basic services which can be deployed and used by server.
+  Provide some basic services which can be deployed and used by others(server).
 
 ```java
   package com.myapp.basis;
@@ -146,7 +151,7 @@ and the pom of client looks like:
     private Map<String, Object> store = new HashMap<String,Object>();
     public boolean store(String key, Object value){
       store.put(key, value);
-      reture true;
+      return true;
     }
 
     public Object pick(String key){
@@ -163,7 +168,7 @@ and the pom of the basis:
     <parent>
         <groupId>com.myapp</groupId>
         <artifactId>root</artifactId>
-        <version>0.0.1</version>
+        <version>1.0.0</version>
     </parent>
     <artifactId>basis</artifactId>
     <name>My App Basis</name>
@@ -172,40 +177,49 @@ and the pom of the basis:
 
 #### 4. com.myapp.server
 
-  The server runtime part.
+  The server depends on the api project and services provided by basis.
 
 ```java
   package com.myapp.server;
 
   @org.springframework.stereotype.Component
   public class ServerImpl implements ServerAPI{
-    @org.springframework.stereotype.Autowired
+    @org.springframework.beans.factory.annotation.Autowired
     private CacheService cacheService;
 
-    private List<ClientAPI> clients = new LinkedList<ClientAPI>();
+    private Map<String, ClientAPI> clients = new HashMap<String, ClientAPI>();
 
-    public void register(String clientId, String address){
-      RmiProxyFactoryBean factoryBean = new RmiProxyFactoryBean();
-      factoryBean.setServiceInterface(ClientAPI.class);
-      factoryBean.setServiceUrl(String.format("rmi://%s:%d/client", address, 1099));
-      factoryBean.afterPropertiesSet();
-      ClientAPI client = (ClientAPI)factoryBean.getObject();
-      clients.add(client);
+    public String register(String clientId, String address) {
+        RmiProxyFactoryBean factoryBean = new RmiProxyFactoryBean();
+        factoryBean.setServiceInterface(ClientAPI.class);
+        factoryBean.setServiceUrl(String.format("rmi://%s:%d/client", address, 1099));
+        factoryBean.afterPropertiesSet();
+        ClientAPI client = (ClientAPI) factoryBean.getObject();
+        String token = UUID.randomUUID().toString();
+        clients.put(token, client);
+        return token;
     }
 
     public Object perform(String job){
-      // Reused cached result first
-      String result = cacheService.pick(job);
-      if( result != null )
+        // Reused cached result first
+        Object result = cacheService.pick(job);
+        if( result != null )
+            return result;
+        // pick a client to perform the job if no cached result
+        ClientAPI client = pickClient();
+        if( client == null )
+            throw new IllegalStateException("There is no client available to perform the job: " + job);
+        result = client.perform(job);
+        // store the result to reused latter
+        cacheService.store(job, result);
         return result;
-      // pick a client to perform the job if no cached result
-      ClientAPI client = pickClient();
-      if( client == null ) 
-        throw new IllegalStateException("There is no client available to perform the job: " + job);
-      result = client.perform(job);
-      // store the result to reused latter
-      cacheService.store(job, result);
-      return result;
+    }
+
+    private ClientAPI pickClient() {
+        //pick a client by random
+        int max = clients.size();
+        int randIndex = new Random().nextInt(max);
+        return (ClientAPI) clients.values().toArray()[randIndex];
     }
   }
 ```
@@ -218,7 +232,7 @@ and the pom of server:
     <parent>
         <groupId>com.myapp</groupId>
         <artifactId>root</artifactId>
-        <version>0.0.1</version>
+        <version>1.0.0</version>
     </parent>
     <artifactId>server</artifactId>
     <name>My App Server</name>
@@ -242,9 +256,9 @@ and the pom of server:
 
 #### 1. Static Component
 
-Because of the api project does not provide any bean instances in runtime, we treat it as a *static* component.
+Because of the api project does not provide any bean instances in runtime, we treat it as a **static** component.
 
-  you just need package this project as:
+  you just need package this project output as:
 
 ```
   path/to/com.myapp.api-1.0.0.jar!
@@ -264,7 +278,7 @@ The spring-component-framework will resolve the dependencies declaired by pom.xm
 #### 2. Application Component
 
 Because of the client runs as a standalone runtime, and it exports services by RMI,
-you should use spring application context to manage them and we treat it as an *application* component.
+you should use spring application context to manage them and we treat it as an **application** component.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -278,11 +292,11 @@ you should use spring application context to manage them and we treat it as an *
 
     <context:component-scan base-package="com.myapp.client"/>
 
-    <bean name="cacheServiceExporter" class="org.springframework.remoting.rmi.RmiServiceExporter">
-      <property name="serviceInterface" value="com.myapp.ClientAPI"/>
+    <bean name="clientExporter" class="org.springframework.remoting.rmi.RmiServiceExporter">
+      <property name="serviceInterface" value="com.myapp.api.ClientAPI"/>
       <property name="serviceName" value="clientImpl"/>
       <property name="servicePort" value="1099"/>
-      <property name="service" ref="importedCacheService"/>
+      <property name="service" ref="clientImpl"/>
     </bean>
 </beans>  
 ```
@@ -308,7 +322,7 @@ The spring-component-framework will create an application context defined by app
 
 Because of the basis need create a CacheServiceImpl bean in runtime and exports it as a shared service,
 
- We treat it as a *service* component which contains a service.xml besides application.xml:
+ We treat it as a **service** component which contains a service.xml besides application.xml:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -353,12 +367,12 @@ at last, package the basis as:
     |  |  |  |-CacheServiceImpl.class
 ```
 
-The spring-component-framework will *export* the service to be imported by other service components.
+The spring-component-framework will **export** the service to be imported by other service components.
 
 
 #### 4. Service Component(Consumer)
 
-The server is a *service* component also, which will create some beans not only, depends some other services but also in runtime.
+The server is a **service** component also, which will create some beans not only, depends some other services but also in runtime.
 
 Import some services as below:
 
@@ -496,7 +510,7 @@ you should saw your app is built like below:
     |  |  |-com.myapp.server-0.0.1.jar
     |  |  |-com.myapp.api-0.0.1.jar
     |  |  |-com.myapp.basis-0.0.1.jar
-    |  |  |-org.springframework.spring-beans-3.2.14.RELEASE.jar
+    |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.jar
     |  |  |-<other depended jars>
     |  |-logs
     |  |-tmp
@@ -516,7 +530,7 @@ you should saw your app is built like below:
     |  |-lib
     |  |  |-com.myapp.client-0.0.1.jar
     |  |  |-com.myapp.api-0.0.1.jar
-    |  |  |-org.springframework.spring-beans-3.2.14.RELEASE.jar
+    |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.jar
     |  |  |-<other depended jars>
     |  |-logs
     |  |-tmp
