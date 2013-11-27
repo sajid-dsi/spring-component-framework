@@ -9,7 +9,7 @@ The spring component framework is used to setup a plugin based, micro-kernel, st
 It can help you decouple your application into several components clearly with zero invasion
 and keep your application consistent between develop time and runtime.
 
-You can download the [example application](spring-example-application) and try it when you read the usage below.
+You can download the [example application](/Kadvin/spring-example-application) and try it when you read the usage below.
 
 
 2. Usage
