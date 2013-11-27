@@ -9,6 +9,8 @@ The spring component framework is used to setup a plugin based, micro-kernel, st
 It can help you decouple your application into several components clearly with zero invasion
 and keep your application consistent between develop time and runtime.
 
+You can download the [example application](spring-example-application) and try it when you read the usage below.
+
 
 2. Usage
 ----------
@@ -172,6 +174,14 @@ and the pom of the basis:
     </parent>
     <artifactId>basis</artifactId>
     <name>My App Basis</name>
+
+    <dependencies>
+      <dependency>
+        <groupId>com.myapp</groupId>
+        <artifactId>api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
 </project>
 ```
 
@@ -294,7 +304,7 @@ you should use spring application context to manage them and we treat it as an *
 
     <bean name="clientExporter" class="org.springframework.remoting.rmi.RmiServiceExporter">
       <property name="serviceInterface" value="com.myapp.api.ClientAPI"/>
-      <property name="serviceName" value="clientImpl"/>
+      <property name="serviceName" value="client"/>
       <property name="servicePort" value="1099"/>
       <property name="service" ref="clientImpl"/>
     </bean>
@@ -428,18 +438,35 @@ You can declair those imports/exports in the service.xml both, then it acts as a
 ### 2.3 Deploy the project
 
 #### 1. Deploy myapp manually
+
 The application should be deployed with some constrants:
 
 Given the target folder of the server release is path/to/server
 
   1. All libraries(include com.myapp.*, 3rd parts) should be placed in lib
-  2. All 3rd parts libraries(not packaged with META-INF/pom.xml) should place there poms in lib/poms
-  3. spring-component-framework jar should be placed in boot
+  2. We should place the pom of 3rd-part libraries without META-INF/pom.xml in the jar in lib/poms
+  3. Spring-component-framework jar should be placed in boot
+
+```
+  path/to/server
+    |  |-boot
+    |  |  |-net.happyonroad.spring-component-framework-0.0.1.jar
+    |  |-lib
+    |  |  |-com.myapp.server-0.0.1.jar
+    |  |  |-com.myapp.api-0.0.1.jar
+    |  |  |-com.myapp.basis-0.0.1.jar
+    |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.jar
+    |  |  |-<other depended jars>
+    |  |  |-poms
+    |  |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.pom
+    |  |  |  |-<other depended poms>
+```
 
 Then you can start your application by below script:
 
 ```
-  java -jar boot/net.happyonroad.spring-component-framework-0.0.1.jar com.myapp.server-1.0.0.jar
+  cd path/to/server
+  java -jar boot/net.happyonroad.spring-component-framework-0.0.1.jar com.myapp.server-1.0.0
 ```
 
 then you will see below output:
@@ -512,6 +539,9 @@ you should saw your app is built like below:
     |  |  |-com.myapp.basis-0.0.1.jar
     |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.jar
     |  |  |-<other depended jars>
+    |  |  |-poms
+    |  |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.pom
+    |  |  |  |-<other depended poms>
     |  |-logs
     |  |-tmp
 ```
@@ -532,6 +562,9 @@ you should saw your app is built like below:
     |  |  |-com.myapp.api-0.0.1.jar
     |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.jar
     |  |  |-<other depended jars>
+    |  |  |-poms
+    |  |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.pom
+    |  |  |  |-<other depended poms>
     |  |-logs
     |  |-tmp
 
@@ -553,10 +586,36 @@ I'v tried to integrate those excellent products into my application, but I found
 
 I think OSGi's complexity comes from runtime dynamic ability, it try to help me create a person who can cut off his leg and replace with another new one.
 
-But I don't want so powerful and terrible man, I just need a normal man who can be borned, play and dead then.
+But I don't want a so powerful and terrible man, I just need a normal man who can be borned, play and dead then.
 
-I want it been component oriented, developer friendly, be consistent in anytime from any aspects.
+About the spring-plugin, I have referred it when I finish this project, but I think we have different concerns, it seems to enhance the application in just one application context, based on one current application forms.
 
-So I tried to write the my products from user perspective:
+That is to say, it take care about connectivity more than isolation in my opinion.
+
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:plugin="http://www.springframework.org/schema/plugin"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/plugin http://www.springframework.org/schema/plugin/spring-plugin.xsd">
+
+  <import resource="classpath*:com/acme/**/plugins.xml" />
+
+  <bean id="host" class="com.acme.HostImpl">
+    <property name="plugins" ref="plugins" />
+  </bean>
+
+  <plugin:list id="plugins" class="org.acme.MyPluginInterface" />
+</beans>
+```
+
+I want it be
+
+ * component oriented
+ * developer friendly
+ * zero invasion
+ * consistent in anytime from any aspects
+
+So I tried to write the my products from user perspective like below.
 
 TODO: more technology details
