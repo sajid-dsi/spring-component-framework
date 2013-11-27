@@ -592,6 +592,8 @@ About the spring-plugin, I have referred it when I finish this project, but I th
 
 That is to say, it take care about connectivity more than isolation (in my opinion).
 
+below is the example application context configuration I copied from it's README.
+
 ```xml
 <beans xmlns="http://www.springframework.org/schema/beans"
   xmlns:plugin="http://www.springframework.org/schema/plugin"
@@ -615,7 +617,5 @@ I want it be
  * developer friendly
  * zero invasion
  * consistent in anytime from any aspects
-
-So I tried to write the my products from user perspective like below.
 
 TODO: more technology details
