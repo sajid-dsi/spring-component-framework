@@ -30,12 +30,13 @@ public class PomClassRealm extends ClassRealm implements Comparable<PomClassReal
         this.component = component;
         URL url = this.component.getJarFileURL();
         if (url != null) addURL(url);
-        //TODO 应该将所有的第三方包的类由一个统一的class loader加载，管理
+        //将所有的第三方包的类由一个统一的class loader加载，管理
         //而后这个class loader面向不同的组件，有许多 representation
         //跨过各种依赖关系，直接将第三方包依赖加到本身上，加速系统启动过程中的Class Load过程
         Set<URL> libUrls = this.component.getDependedPlainURLs();
-        for (URL libUrl : libUrls) {
-            addURL(libUrl);
+        if(libUrls != null){
+            ClassLoaderRepresentation representation = new ClassLoaderRepresentation(libUrls);
+            setParentClassLoader(representation);
         }
     }
 

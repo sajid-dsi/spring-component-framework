@@ -22,14 +22,17 @@ public class PomStrategy extends AbstractStrategy {
 
     @Override
     public Class loadClass(String name) throws ClassNotFoundException {
+        //pom realm refer to component itself
         Class clazz = pomRealm.loadClassFromSelf(name);
 
         if ( clazz == null )
         {
+            //depended pom realms refer to depended components
             clazz = pomRealm.loadClassFromDepends( name );
 
             if ( clazz == null )
             {
+                //refer to 3rd libraries which can be accessed by current class
                 clazz = pomRealm.loadClassFromParent( name );
 
                 if ( clazz == null )

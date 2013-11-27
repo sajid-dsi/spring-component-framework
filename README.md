@@ -195,11 +195,11 @@ and the pom of the basis:
 
     public Object perform(String job){
       // Reused cached result first
-      String result = cacheService.get(job);
+      String result = cacheService.pick(job);
       if( result != null )
         return result;
       // pick a client to perform the job if no cached result
-      ClientAPI client = pick();
+      ClientAPI client = pickClient();
       if( client == null ) 
         throw new IllegalStateException("There is no client available to perform the job: " + job);
       result = client.perform(job);
@@ -244,7 +244,7 @@ and the pom of server:
 
 Because of the api project does not provide any bean instances in runtime, we treat it as a *static* component.
 
-  you just need package the this project as:
+  you just need package this project as:
 
 ```
   path/to/com.myapp.api-1.0.0.jar!
@@ -259,9 +259,11 @@ Because of the api project does not provide any bean instances in runtime, we tr
     |  |  |  |-CacheService.class
 ```
 
+The spring-component-framework will resolve the dependencies declaired by pom.xml in runtime.
+
 #### 2. Application Component
 
-Because of the client runs in a standalone runtime, and it export services by RMI,
+Because of the client runs as a standalone runtime, and it exports services by RMI,
 you should use spring application context to manage them and we treat it as an *application* component.
 
 ```xml
@@ -299,9 +301,12 @@ and package this project:
     |  |  |  |-ClientImpl.class
 ```
 
+The spring-component-framework will create an application context defined by application.xml for it in runtime.
+
+
 #### 3. Service Component(Provider)
 
-Because of the basis need create a CacheServiceImpl bean in runtime and export it as a shared service,
+Because of the basis need create a CacheServiceImpl bean in runtime and exports it as a shared service,
 
  We treat it as a *service* component which contains a service.xml besides application.xml:
 
@@ -347,6 +352,8 @@ at last, package the basis as:
     |  |  |-basis
     |  |  |  |-CacheServiceImpl.class
 ```
+
+The spring-component-framework will *export* the service to be imported by other service components.
 
 
 #### 4. Service Component(Consumer)
@@ -400,9 +407,9 @@ at last, package the server as:
 
 #### 5. Service Component(Mixed)
 
-If there is a component which will use other service not only, provide some services but also.
+If there is a component which will use other services not only, provide some services but also.
 
-You can declair those imports/exports in the service.xml, then it acts as a mixed service component.
+You can declair those imports/exports in the service.xml both, then it acts as a mixed service component.
 
 ### 2.3 Deploy the project
 
@@ -412,7 +419,7 @@ The application should be deployed with some constrants:
 Given the target folder of the server release is path/to/server
 
   1. All libraries(include com.myapp.*, 3rd parts) should be placed in lib
-  2. All 3rd parts libraries(not packaged with pom.xml) should place there pom in lib/poms
+  2. All 3rd parts libraries(not packaged with META-INF/pom.xml) should place there poms in lib/poms
   3. spring-component-framework jar should be placed in boot
 
 Then you can start your application by below script:
