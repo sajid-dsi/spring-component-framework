@@ -11,27 +11,10 @@ It can help you decouple your application into several components cleanly.
 2. Usage
 ----------
 
-2.1 Given you have a distributed application which contains two parts: server and client, 
-and your have separated the project into several logic parts, such as:
+### 2.1 Normal application
 
-1. com.myapp.api
-  Define the api between the server and client
-2. com.myapp.basis
-  Provide some basic services which can be deployed and used in client or server runtime.
-3. com.myapp.server
-  The server runtime part.
-4. com.myapp.client
-  The client runtime part.
-
-2.2 Develop my app
-
-1. We treat the api as a static component, that is to say, it just provide static content to be used by others.
-
-2. We treat the basis as an application component, which will fork some beans in runtime.
-
-3. We treat the server and client as a service component ,which will not only create some beans, depends some other services but also in runtime.
-
-2.3 Maven poms
+Given you have a distributed application which contains two parts: server and client, 
+and your have separated this project into several modules:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -51,7 +34,51 @@ and your have separated the project into several logic parts, such as:
     </modules>
 </project>
 ```
-the api sub project pom:
+
+1. com.myapp.api
+
+  Define the api between the server and client
+
+```java
+  //all below API is in this package;
+  package com.myapp.api;
+
+  /**
+   * The Server API, used by client
+   */
+  public interface ServerAPI{
+    /**
+     * A service export to client to register
+     */
+    String register(String clientId, String address);
+
+    /**
+     * Receive some job assigned by outer system
+     * and the server should pick a client to perform the job really
+     */
+    Object perform(String job);
+  }
+
+  /**
+   * The Client API, used by server
+   */
+  public interface ClientAPI{
+    /**
+     * A service export to server to be assigned with some job
+     */
+    Object perform(String job);
+  }
+
+  /**
+   * A shared service, which will be used by server and client both
+   */
+  public interface CacheService{
+    boolean store(String key, Object value);
+    Object pick(String key);
+  }
+```
+
+and the pom of api:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -65,7 +92,68 @@ the api sub project pom:
     <name>My App API</name>
 </project>
 ```
-the basis sub project pom:
+
+2. com.myapp.client
+
+  The client runtime part.
+
+```java
+  package com.myapp.client;
+
+  @org.springframework.stereotype.Component
+  public class ClientImpl implements ClientAPI{
+    public Object perform(String job){
+      //do some real staff
+      //and return the result;
+    }
+  }
+```
+
+and the pom of client looks like:
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.myapp</groupId>
+        <artifactId>root</artifactId>
+        <version>0.0.1</version>
+    </parent>
+    <artifactId>client</artifactId>
+    <name>My App Client</name>
+
+    <dependencies>
+      <dependency>
+        <groupId>com.myapp</groupId>
+        <artifactId>api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+</project>
+```
+
+3. com.myapp.basis
+
+  Provide some basic services which can be deployed and used by server.
+
+```java
+  package com.myapp.basis;
+
+  @org.springframework.stereotype.Component
+  public class CacheServiceImpl implements CacheService{
+    private Map<String, Object> store = new HashMap<String,Object>();
+    public boolean store(String key, Object value){
+      store.put(key, value);
+      reture true;
+    }
+
+    public Object pick(String key){
+      return store.get(key);
+    }
+  }
+```
+
+and the pom of the basis:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -80,7 +168,44 @@ the basis sub project pom:
 </project>
 ```
 
-the server sub project pom:
+4. com.myapp.server
+
+  The server runtime part.
+
+```java
+  package com.myapp.server;
+
+  @org.springframework.stereotype.Component
+  public class ServerImpl implements ServerAPI{
+    @org.springframework.stereotype.Autowired
+    private CacheService cacheService;
+
+    private List<ClientAPI> clients = new LinkedList<ClientAPI>();
+
+    public void register(String clientId, String address){
+      // the RemoteClientProxy is a proxy bean refer to the client at specific address by RMI or other technology
+      ClientAPI client = new RemoteClientProxy(clientId, address);
+      clients.add(client);
+    }
+
+    public Object perform(String job){
+      // Reused cached result first
+      String result = cacheService.get(job);
+      if( result != null )
+        return result;
+      // pick a client to perform the job if no cached result
+      ClientAPI client = pick();
+      if( client == null ) 
+        throw new IllegalStateException("There is no client available to perform the job: " + job);
+      result = client.perform(job);
+      // store the result to reused latter
+      cacheService.store(job, result);
+      return result;
+    }
+  }
+```
+
+and the pom of server:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -107,34 +232,165 @@ the server sub project pom:
     </dependencies>
 </project>
 ```
-the client sub project pom:
+
+### 2.2 Componentization
+
+1. Because of the api does not provide any bean instances in runtime, we treat it as a static component.
+
+  you just need package the this project as:
+
+```
+  path/to/com.myapp.api-1.0.0.jar!
+    |-META-INF
+    |  |-MANIFEST.MF               # Normal, generated by package tool
+    |  |-pom.xml                   # just the pom of api projects
+    |-com
+    |  |-myapp
+    |  |  |-api
+    |  |  |  |-ServerAPI.class
+    |  |  |  |-ClientAPI.class
+    |  |  |  |-CacheService.class
+```
+
+2. Because of the client runs in a standalone runtime, and it export services by RMI instead of direct bean,
+you should use spring application context to manage them
+and we treat it as an application component.
+
+  So create an application.xml as:
 
 ```xml
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>com.myapp</groupId>
-        <artifactId>root</artifactId>
-        <version>0.0.1</version>
-    </parent>
-    <artifactId>client</artifactId>
-    <name>My App Client</name>
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
 
-    <dependencies>
-      <dependency>
-        <groupId>com.myapp</groupId>
-        <artifactId>api</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.myapp</groupId>
-        <artifactId>basis</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-    </dependencies>
-</project>
+    <context:component-scan base-package="com.myapp.client"/>
 
-You can add spring-component-framework as runtime dependency to the two real runtime project's pom(client and server)
+    <bean name="cacheServiceExporter" class="org.springframework.remoting.rmi.RmiServiceExporter">
+      <property name="serviceInterface" value="com.myapp.ClientAPI"/>
+      <property name="serviceName" value="clientImpl"/>
+      <property name="servicePort" value="1098"/>
+      <property name="service" ref="importedCacheService"/>
+    </bean>
+</beans>  
+```
+
+and package this project:
+
+```
+  path/to/com.myapp.client-1.0.0.jar!
+    |-META-INF
+    |  |-MANIFEST.MF
+    |  |-pom.xml                   # just the pom of basis projects
+    |  |-application.xml           # spring context defined above
+    |-com
+    |  |-myapp
+    |  |  |-client
+    |  |  |  |-ClientImpl.class
+```
+
+3. Because of the basis need create a CacheServiceImpl bean in runtime and export it as a shared service,
+
+ We treat it as a service component which contains a service.xml besides application.xml:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<service xmlns="http://www.happyonroad.net/schema/service"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.happyonroad.net/schema/service
+       http://www.happyonroad.net/schema/service.xsd">
+    <export>
+        <role>com.myapp.api.CacheService</role>
+    </export>
+</service>
+```
+
+and it's an application component also:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="com.myapp.basis"/>
+</beans>  
+```
+
+at last, package the client as:
+
+```
+  path/to/com.myapp.client-1.0.0.jar!
+    |-META-INF
+    |  |-MANIFEST.MF
+    |  |-pom.xml                   # just the pom of basis projects
+    |  |-application.xml           # spring context defined above
+    |  |-service.xml               # service declaration 
+    |-com
+    |  |-myapp
+    |  |  |-client
+    |  |  |  |-ClientImpl.class
+```
+
+
+4. The server is a service component, which will create some beans not only, depends some other services but also in runtime.
+
+Declair imported service:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<service xmlns="http://www.happyonroad.net/schema/service"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.happyonroad.net/schema/service
+       http://www.happyonroad.net/schema/service.xsd">
+    <import>
+        <role>com.myapp.api.CacheService</role>
+    </import>
+</service>
+```
+
+Organize inner beans by:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="com.myapp.server"/>
+</beans>  
+```
+
+at last, package the server as:
+
+```
+  path/to/com.myapp.server-1.0.0.jar!
+    |-META-INF
+    |  |-MANIFEST.MF
+    |  |-pom.xml                   # just the pom of basis projects
+    |  |-application.xml           # spring context defined above
+    |  |-service.xml               # service declaration 
+    |-com
+    |  |-myapp
+    |  |  |-server
+    |  |  |  |-ServerImpl.class
+```
+
+### 2.3 Deploy/automation the project
+
+You can add spring-component-framework as runtime dependency to the real runtime project's pom(client and server)
 
 ```xml
 <dependencies>
@@ -198,7 +454,9 @@ you should saw your app is build like below:
     |  |  |-<other depended jars>
     |  |-logs
     |  |-tmp
+```
 
+```
   path/to/client
     |  |-bin
     |  |  |-start.bat
@@ -212,7 +470,6 @@ you should saw your app is build like below:
     |  |-lib
     |  |  |-com.myapp.client-0.0.1.jar
     |  |  |-com.myapp.api-0.0.1.jar
-    |  |  |-com.myapp.basis-0.0.1.jar
     |  |  |-org.springframework.spring-beans-3.2.14.RELEASE.jar
     |  |  |-<other depended jars>
     |  |-logs
