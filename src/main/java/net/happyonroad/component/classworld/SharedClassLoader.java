@@ -24,4 +24,17 @@ class SharedClassLoader extends URLClassLoader{
             }
         }
     }
+
+    // Get the host url of the class loaded by this class
+    public URL hostUrl(Class<?> theClass) {
+        String path = theClass.getName().replace(".", "/") + ".class";
+        URL url = this.findResource(path);
+        if( url != null ){
+            for (URL jarUrl : allUrls) {
+                if(url.getPath().contains(jarUrl.getPath()))
+                    return url;
+            }
+        }
+        return null;
+    }
 }

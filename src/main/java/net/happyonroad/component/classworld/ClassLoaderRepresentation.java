@@ -25,12 +25,24 @@ public class ClassLoaderRepresentation extends ClassLoader {
 
     @Override
     public Class<?> loadClass(String name) throws ClassNotFoundException {
-        return sharedClassLoader.loadClass(name);
+        Class<?> theClass = sharedClassLoader.loadClass(name);
+        URL hostUrl = sharedClassLoader.hostUrl(theClass);
+        if(hostUrl == null) //it's loaded by parent actually, not by the shared instance
+            return theClass;
+        if(accessible(hostUrl))
+            return theClass;
+        else
+            throw new ClassNotFoundException(name);
     }
 
     @Override
     public InputStream getResourceAsStream(String name) {
-        return sharedClassLoader.getResourceAsStream(name);
+        URL url = sharedClassLoader.getResource(name);
+        try {
+            return url != null ? url.openStream() : null;
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     @Override
