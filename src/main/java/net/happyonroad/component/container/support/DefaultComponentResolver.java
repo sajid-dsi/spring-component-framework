@@ -33,7 +33,7 @@ public class DefaultComponentResolver implements ComponentResolver {
     }
 
     protected void customizeXstream() {
-        logger.debug("Customizing xstream engine");
+        logger.trace("Customizing xstream engine");
         xmlResolver = new XStream();
         xmlResolver.alias("project", DefaultComponent.class);
         xmlResolver.alias("parent", Component.class, DefaultComponent.class);
@@ -53,7 +53,7 @@ public class DefaultComponentResolver implements ComponentResolver {
         xmlResolver.alias("module", String.class);
         xmlResolver.aliasField("modules", DefaultComponent.class, "moduleNames");
         xmlResolver.registerLocalConverter(DefaultComponent.class, "properties", new MavenPropertiesConverter());
-        logger.debug("Customized  xstream engine");
+        logger.trace("Customized  xstream engine");
     }
 
     @Override
