@@ -23,12 +23,14 @@ Given you want to develop a complex application contains two parts: server and c
   +---------+           +--------+
   | server  |           | client |
   |  |-basis|           |  |     |
-  |  |-api  |<---api--->|  |-api |
+  |  |-api  |<---RMI--->|  |-api |
   +---------+           +--------+
 
 ```
 
 server and client is deployed with a shared static lib both: api
+
+they can communicate with each other in accordance with the contract defined in api through RMI(over SpringFramework).
 
 and the server is deployed with another shared component: basis.
 
@@ -55,7 +57,7 @@ you can seperate the project into several modules:
 
 #### 1. com.myapp.api
 
-  Define the api between the server and client
+  Define the api between modules.
 
 ```java
   //all below API is in this package;
@@ -301,8 +303,10 @@ The spring-component-framework will resolve the dependencies declaired by pom.xm
 
 #### 2. Application Component
 
-Because of the client runs as a standalone runtime, and it exports services by RMI,
-you should use spring application context to manage them and we treat it as an **application** component.
+The client runs as a standalone runtime, and it exports services by RMI,
+you should use spring application context to manage them.
+
+And we treat it as an **application** component.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -344,7 +348,7 @@ The spring-component-framework will create an application context defined by app
 
 #### 3. Service Component(Provider)
 
-Because of the basis need create a CacheServiceImpl bean in runtime and exports it as a shared service,
+The basis need create a CacheServiceImpl bean in runtime and exports it as a shared service,
 
  We treat it as a **service** component which contains a service.xml besides application.xml:
 
@@ -360,7 +364,7 @@ Because of the basis need create a CacheServiceImpl bean in runtime and exports 
 </service>
 ```
 
-and it contains an application component also:
+and it contains an application.xml also:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -376,7 +380,7 @@ and it contains an application component also:
 </beans>  
 ```
 
-at last, package the basis as:
+at last, package the basis output as:
 
 ```
   path/to/com.myapp.basis-1.0.0.jar!
@@ -428,7 +432,7 @@ Organize inner beans by:
 </beans>  
 ```
 
-at last, package the server as:
+at last, package the server output as:
 
 ```
   path/to/com.myapp.server-1.0.0.jar!
@@ -448,6 +452,39 @@ at last, package the server as:
 If there is a component which will use other services not only, provide some services but also.
 
 You can declair those imports/exports in the service.xml both, then it acts as a mixed service component.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<service xmlns="http://www.happyonroad.net/schema/service"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.happyonroad.net/schema/service
+       http://www.happyonroad.net/schema/service.xsd">
+    <import>
+        <role>com.someapp.api.ServiceA</role>
+        <hint>default</hint>
+    </import>
+    <import>
+        <role>com.someapp.api.ServiceA</role>
+        <hint>myapp</hint>
+        <as>myappServiceA</as>
+    </import>
+
+    <export>
+        <role>com.someapp.api.ServiceB</role>
+        <hint>someapp</hint>
+        <ref>someAppBeanNameOrId</ref>
+    </export>
+</service>
+```
+
+  * You can qualify the service relationship by specifying a `hint` for import/export
+    if there are multiple services exported with the given interface in module depends.
+    
+  * You can specify the exported service with a `ref` to target the bean which is exported actually
+    if there are multiple beans implements the given interface in module application context
+
+  * You can name the imported service with a bean name by specify a `as` element, 
+    and then, you application can qualify the service with Spring @Qualifier as normal.
 
 ### 2.3 Deploy the project
 
