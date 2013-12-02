@@ -29,9 +29,10 @@ Given you want to develop a complex application contains two parts: server and c
 ```
 
 server and client is deployed with a shared static lib both: api
+
 and the server is deployed with another shared component: basis.
 
-and your can separat the project into several modules:
+you can seperate the project into several modules:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
