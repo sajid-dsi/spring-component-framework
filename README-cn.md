@@ -1,23 +1,24 @@
 spring-component-framework
 ==========================
 
-1. Scenario
+1. 使用场景
 -----------
 
-The spring component framework is used to setup a plugin based, micro-kernel, standalone application(today, we will support webapp in later releases) which is based on SpringFramework.
+Spring component framework 是一个基于SpringFramework和Maven的组件化的微内核Java独立程序框架(未来版本将支持Web应用）。
 
-It can help you decouple your application into several components clearly with zero invasion
-and keep your application consistent between develop time and runtime.
+它能帮助你将应用程序切割成为独立的小块（一个Jar包就是一个模块），且对你的应用程序完全没有任何侵入性。
+不需要像OSGi那样，需要实现BundleContext接口，了解MANEFEST.MF里面一堆Bundle-*语义
 
-You can download the [spring-component-example application](https://github.com/Kadvin/spring-component-example) and try it when you read the usage below.
+在此之外，它还可以辅助你打包应用程序，并且在Maven的支持下，保持你的应用程序中在开发态与运行态的一致性。
 
+在阅读以下介绍时，你可以下载并参考完整的 [示例程序](https://github.com/Kadvin/spring-component-example)
 
-2. Usage
+2. 使用方式
 ----------
 
-### 2.1 Normal application
+### 2.1 普通应用程序
 
-Given you want to develop a complex application contains two parts: server and client
+假设你需要开发一个分布式程序，包括服务器端和客户端两个部分。
 
 ```
               +---------+           +--------+
@@ -28,15 +29,13 @@ Given you want to develop a complex application contains two parts: server and c
 
 ```
 
-server and client will run in standalone runtimes, and deployed with a shared static lib both: api
+服务器和客户端部署在不同的进程空间，相互之间通过RMI访问，共同遵守api中定义的接口。
 
-they can communicate with each other in accordance with the contract defined in api through RMI(over SpringFramework).
+服务器比客户端额外多一个部署一个basis组件，用于为server提供存储/缓存功能。
 
-and the server is deployed with another shared component: basis.
+调用者(caller)可以被视为对系统外部程序的一种模拟，通过RMI发起对Server的调用。
 
-caller is a simulator of outer user, which can be executed by command line.
-
-you can seperate the project into several modules:
+我们可以将程序分为如下几个模块：
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -60,14 +59,14 @@ you can seperate the project into several modules:
 
 #### 1. com.myapp.api
 
-  Define the api between modules.
+  定义模块之间的API.
 
 ```java
   //all below API is in this package;
   package com.myapp.api;
 
   /**
-   * The Server API, used by client or caller
+   * 服务器的API，被客户端或者外部调用者调用
    */
   public interface ServerAPI{
     /**
@@ -85,7 +84,7 @@ you can seperate the project into several modules:
 
 ```java
   /**
-   * The Client API, used by server
+   * 客户端API，被服务器调用
    */
   public interface ClientAPI{
     /**
@@ -98,7 +97,7 @@ you can seperate the project into several modules:
 
 ```java
   /**
-   * A shared service, which will be used by server
+   * 缓存服务，被服务器内部模块调用
    */
   public interface CacheService{
     boolean store(String key, Object value);
@@ -106,7 +105,7 @@ you can seperate the project into several modules:
   }
 ```
 
-and the pom of api:
+API项目的Maven Pom定义文件大致如下:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -123,7 +122,7 @@ and the pom of api:
 
 #### 2. com.myapp.client
 
-  The client pseudo-code:
+  客户端伪码如下：
 
 ```java
   package com.myapp.client;
@@ -137,7 +136,7 @@ and the pom of api:
   }
 ```
 
-and the pom of client looks like:
+客户端的Maven Pom大致如下:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -162,7 +161,7 @@ and the pom of client looks like:
 
 #### 3. com.myapp.basis
 
-  Provide some basic services which can be deployed and used by others(server).
+  提供简单的缓存服务，被服务器模块调用
 
 ```java
   package com.myapp.basis;
@@ -181,7 +180,7 @@ and the pom of client looks like:
   }
 ```
 
-and the pom of the basis:
+Basis模块的Pom大致如下:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -206,7 +205,7 @@ and the pom of the basis:
 
 #### 4. com.myapp.server
 
-  The server depends on the api project and services provided by basis.
+  Server模块依赖API项目，同时集成Basis模块。
 
 ```java
   package com.myapp.server;
@@ -253,7 +252,7 @@ and the pom of the basis:
   }
 ```
 
-and the pom of server:
+Server模块的Pom大致如下:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -283,7 +282,7 @@ and the pom of server:
 
 #### 4. com.myapp.caller
 
-  A command line programm, accept user command, call server api by RMI.
+  一个命令行程序，支持用户通过命令行调用服务器的API
 
 ```java
 /** Accept test caller */
@@ -311,7 +310,7 @@ public class CLI {
 }
 ```
 
-the pom of caller looks like:
+相应的POM文件大致如下：
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -338,21 +337,21 @@ the pom of caller looks like:
 </project>
 ```
 
-The caller will be packaged as a uberjar, and you can execute it by `java -jar path/to/caller.jar job`
+该项目实际将会被打包成为一个uberjar，用户可以直接 java -jar path/to/caller.jar job 方式调用
 
-### 2.2 Componentization
+### 2.2 组件化介绍
 
-#### 1. Static Component
+#### 1. 静态组件
 
-Because of the api project does not provide any bean instances in runtime, we treat it as a **static** component.
-
-  you just need package this project output as:
+由于API项目在运行时实际没有主动创建/管理任何Java对象实例，它仅仅是提供一些接口/静态函数，常量给其他模块使用
+  所以我们视其为 **静态** 组件。
+  静态组件包应该被打包成为如下格式：
 
 ```
   path/to/com.myapp.api-1.0.0.jar!
     |-META-INF
-    |  |-MANIFEST.MF               # Normal, generated by package tool
-    |  |-pom.xml                   # just the pom of api projects
+    |  |-MANIFEST.MF               # 一般性打包工具生成
+    |  |-pom.xml                   # 关键的静态组件标识，有个pom.xml（就是Maven项目的Pom)
     |-com
     |  |-myapp
     |  |  |-api
@@ -361,14 +360,14 @@ Because of the api project does not provide any bean instances in runtime, we tr
     |  |  |  |-CacheService.class
 ```
 
-The spring-component-framework will resolve the dependencies declaired by pom.xml in runtime.
+Spring Component Framework在运行时，会根据META-INF/pom.xml文件的定义，为其解析相关依赖。
 
-#### 2. Application Component
+#### 2. 应用组件
 
-The client runs as a standalone runtime, and it exports services by RMI,
-you should use spring application context to manage them.
+示例的客户端是作为一个独立的运行时程序运行，它通过RMI暴露服务给服务器调用（而不是进程内依赖）。
+组件规范规定，开发者应该提供一个application.xml在META-INF目录下，用Spring Context对这些Bean加以管理。
 
-And we treat it as an **application** component.
+我们将其定义为 **应用** 组件
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -391,28 +390,27 @@ And we treat it as an **application** component.
 </beans>  
 ```
 
-and package this project:
+应用组件打包结果类似如下:
 
 ```
   path/to/com.myapp.client-1.0.0.jar!
     |-META-INF
     |  |-MANIFEST.MF
-    |  |-pom.xml                   # just the pom of basis projects
-    |  |-application.xml           # spring context defined above
+    |  |-pom.xml                   # 静态组件标识
+    |  |-application.xml           # 应用组件标识
     |-com
     |  |-myapp
     |  |  |-client
     |  |  |  |-ClientImpl.class
 ```
 
-The spring-component-framework will create an application context defined by application.xml for it in runtime.
+Spring Component Framework在运行时加载该jar时，会根据application.xml创建一个Spring Context，并与该组件关联起来。
 
+#### 3. 服务组件(扮演服务提供者角色)
 
-#### 3. Service Component(Provider)
+Basis模块在运行时需要创建一个CacheServiceImpl实例，而且还需要将其 **暴露** 给其他模块使用。
 
-The basis need create a CacheServiceImpl bean in runtime and exports it as a shared service,
-
- We treat it as a **service** component which contains a service.xml besides application.xml:
+我们将其视为 **服务** 组件，它需要在application.xml之外，再提供一个 **service.xml** 如下：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -426,7 +424,7 @@ The basis need create a CacheServiceImpl bean in runtime and exports it as a sha
 </service>
 ```
 
-and it contains an application.xml also:
+其 application.xml 内容大致如下:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -442,29 +440,28 @@ and it contains an application.xml also:
 </beans>  
 ```
 
-at last, package the basis output as:
+最终，basis包应该被打包成为如下格式:
 
 ```
   path/to/com.myapp.basis-1.0.0.jar!
     |-META-INF
     |  |-MANIFEST.MF
-    |  |-pom.xml                   # just the pom of basis projects
-    |  |-application.xml           # spring context defined above
-    |  |-service.xml               # service declaration 
+    |  |-pom.xml                   # 静态组件标识
+    |  |-application.xml           # 应用组件标识
+    |  |-service.xml               # 服务组件标识
     |-com
     |  |-myapp
     |  |  |-basis
     |  |  |  |-CacheServiceImpl.class
 ```
 
-The spring-component-framework will **export** the service to be imported by other service components.
+Spring Component Framework在加载这个jar包之后，会通过某种机制，将其声明的服务 **暴露** 出去给其他服务组件使用。
 
+#### 4. 服务组件(服务的使用者)
 
-#### 4. Service Component(Consumer)
+示例程序的服务器端也是一个 **服务** 组件，它不仅仅需要创建一个ServerImpl实例，还需要依赖Basis提供的服务。
 
-The server is a **service** component also, which will create some beans not only, depends some other services but also in runtime.
-
-Import some services as below:
+为了导入依赖的Basis服务，它需要在service.xml里面做如下声明：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -478,7 +475,7 @@ Import some services as below:
 </service>
 ```
 
-Organize inner beans by:
+其内部的application.xml大致如下:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -494,26 +491,26 @@ Organize inner beans by:
 </beans>  
 ```
 
-at last, package the server output as:
+最后，它需要被打包成如下格式:
 
 ```
   path/to/com.myapp.server-1.0.0.jar!
     |-META-INF
     |  |-MANIFEST.MF
-    |  |-pom.xml                   # just the pom of basis projects
-    |  |-application.xml           # spring context defined above
-    |  |-service.xml               # service declaration 
+    |  |-pom.xml                   # 静态组件标识
+    |  |-application.xml           # 应用组件标识
+    |  |-service.xml               # 服务组件标识
     |-com
     |  |-myapp
     |  |  |-server
     |  |  |  |-ServerImpl.class
 ```
 
-#### 5. Service Component(Mixed)
+#### 5. 服务组件(混合)
 
-If there is a component which will use other services not only, provide some services but also.
+大多数情况，一个服务组件，既会引用其他组件提供的服务，也可能暴露一些服务给别的组件。
 
-You can declair those imports/exports in the service.xml both, then it acts as a mixed service component.
+我们可以将服务的依赖与导出一起定义在service.xml里面，此时组件就是一个混合式的服务组件。
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -539,26 +536,24 @@ You can declair those imports/exports in the service.xml both, then it acts as a
 </service>
 ```
 
-  * You can qualify the service relationship by specifying a `hint` for import/export
-    if there are multiple services exported with the given interface in module depends.
-    
-  * You can specify the exported service with a `ref` to target the bean which is exported actually
-    if there are multiple beans implements the given interface in module application context
+  * 当某个组件依赖的同一接口的服务实例可能存在多个时，服务组件的导入/导出关系可以通过 `hint` 节点进行限制  
 
-  * You can name the imported service by specify a `as` element, 
-    then you can qualify the service with Spring `@Qualifier` as common spring application.
+  * 当某个组件内部的Spring Context包含多个需要导出的接口的实现实例，可以通过设定 `ref` 节点来定向导出相应的bean作为服务。
 
-### 2.3 Deploy the project
+  * 导入的服务，可以通过设定 `as` 元素来为其取名，而后组件内部的application context可以将其视为普通的bean，通过spring内置的 `@Qualifier` 加以限定。
 
-#### 1. Deploy myapp manually
+### 2.3 项目发布
 
-The application should be deployed with some constrants:
+#### 1. 手工发布
 
-Given the target folder of the server release is path/to/server
+示例的应用程序发布需要遵循一些约束与规范：
 
-  1. All libraries(include com.myapp.*, 3rd parts) should be placed in lib
-  2. We should place the pom of 3rd-part libraries without META-INF/pom.xml in the jar in lib/poms
-  3. Spring-component-framework jar should be placed in boot
+假设示例服务发布的目录是: path/to/server
+
+  1. 所有该运行时实际要用到的jar包（包括 com.myapp.*, 第三方包)都应该被放到lib目录下
+  2. 所有的包文件名需要符合格式: $groupId.$artifactId-$version.jar
+  3. 对于第三方包，其内部没有按照我们的规范内嵌 pom.xml， 我们需要将其pom.xml解析出来，放在 lib/poms下
+  4. Spring Component Framework 的Jar包应该被单独放在 boot 目录
 
 ```
   path/to/server
@@ -575,32 +570,24 @@ Given the target folder of the server release is path/to/server
     |  |  |  |-<other depended poms>
 ```
 
-Then you can start your application by below script:
+按照如下格式部署之后，我们就可以使用如下命令行启动应用程序：
 
 ```
   cd path/to/server
   java -jar boot/net.happyonroad.spring-component-framework-0.0.1.jar com.myapp.server-1.0.0
 ```
-the last argument tell the spring-component-framework where to start the application.
+最后一个参数就是告诉Spring Component Framework，哪里是程序的入口，也就是从哪里开始加载jar包。
 
-then you will see below output:
+启动后，你将会看到如下输出：
 
 ```
   <TODO>
 ```
 
-#### 2. Deploy myapp automatically
+#### 2. 自动发布应用
 
-Because of it's zero invasion, you can add spring-component-framework as runtime dependency 
-to your main project's pom
-
-  client and server only, whom will be started by:
-
-```
-  java -jar spring-component-framework-0.0.1.jar com.myapp.server-1.0.0
-or
-  java -jar spring-component-framework-0.0.1.jar com.myapp.client-1.0.0
-```
+我们需要在实际运行时的主模块pom文件中声明对 spring-component-framework 的依赖，强烈建议将该依赖类型设置为 runtime
+  避免开发者在开发过程中直接使用spring-component-framework的静态API。
 
 ```xml
 <dependencies>
@@ -613,7 +600,9 @@ or
 </dependencies>
 ```
 
-and you need add a customized plugin to package the client/server app:
+我们可以在示例程序的client，server中增加一个定制化的Maven插件来完成以上描述的复杂过程：
+
+需要更多信息，请参考该插件的 [详细说明](https://github.com/Kadvin/spring-component-builder)
 
 ```xml
   <build>
@@ -646,13 +635,13 @@ and you need add a customized plugin to package the client/server app:
   </build>
 ```
 
-when you execute such commands in the project root:
+该插件默认在maven package阶段工作，当你在示例程序(client/server)的根目录执行:
 
 ```bash
 mvn package
 ```
 
-you should saw your app is built like below:
+我们将会看到如下输出:
 
 ```
   path/to/server
@@ -702,29 +691,31 @@ you should saw your app is built like below:
 
 ```
 
-and your client and server is ready for start or stop by corresponding start/stop (bat|sh) file.
+此时Client与Server已经准备就绪，支持在Windows或Linux下运行。
 
-
-3. Technologies
+3. 技术原理
 ---------------
 
-Someone maybe doubt about, why there is another more wheel about component/plugin framework? 
+有人会有疑问，已经有OSGi规范了，还有许多不同实现，Spring系列中，还有一个Spring DM Server，为什么还要再发明一个组件/插件框架的轮子？
 
-There is OSGi framework already, and Spring DM server as application server also.
+更有甚者，SpringSource还在开发一个叫做 [spring-plugin](https://github.com/spring-projects/spring-plugin) 插件框架。
 
-Even more, SpringSource is developing a sub-project named as [spring-plugin](https://github.com/spring-projects/spring-plugin). 
+我个人在工作中，曾经尝试基于OSGi开发一些应用，但其实在是过于复杂，引入了太多的概念，工具，约束；我甚至连调试OSGi应用程序的勇气都没了。
 
-I'v tried to integrate those excellent products into my application, but I found I'm stucked in OSGi terrable complexicity, especially integrated with my familar tools, such as IDE(Intellij), repository managment(Maven).
+在OSGi的泥潭里面挣扎时，我认识到，OSGi的复杂性，主要来源于其运行时的动态性；
 
-I think OSGi's complexity comes from runtime dynamic ability, it try to help me create a person who can cut off his leg and replace with another new one.
+我仅仅需要一个简单，清晰的组件框架，打个比方，我仅需要制造一个正常的机器人，它可以开机，运行，而后关机。
 
-But I don't want a so powerful and terrible man, I just need a normal man who can be borned, play and dead then.
+但使用了OSGi，它试图让我们制造一个更强大的机器人，它不仅仅可以开/关机，运行，还能在运行时把自己的胳膊，腿卸下来，换一个新的！
 
 About the spring-plugin, I have referred it when I finish this project, but I think we have different concerns, it seems to enhance the application in just one application context cross many jars, just like normal spring app does.
+关于Spring Plugin，我在开发本组件框架之前，对其进行了考察，但我发现Spring-Plugin与本项目有着不同的关注点。
 
 That is to say, it take care about connectivity more than isolation (in my opinion).
+我认为，spring-plugin更关注程序之间的 **连接性** ，而Spring Component Framework更关注 **隔离性** 
 
 below is the example application context configuration I copied from it's README.
+如下是从Spring Plugin的README中copy来的示例配置：
 
 ```xml
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -743,13 +734,16 @@ below is the example application context configuration I copied from it's README
 </beans>
 ```
 
-The Spring Component Framework is designed to be:
+由此可见，它的基本出发点，是用一个比较强大的 Spring Application Context，跨越多个物理Jar包的阻隔，在其内部通过
+一定的标签，让对象间的按照Plugin语义进行组装，这也符合Spring IOC容器的原本定位。
 
- * Component oriented
- * Developer friendly
- * Zero invasion
- * Consistent in anytime from any aspects
+而Spring Component Framework设计定位于：
 
-We referred to the IOC container of maven: Plexus, and we use its ClassWorlds as jar's class path manager.
+ * 面向组件（一个jar就是一个组件）
+ * 开发者友好（不要引入太多的概念）
+ * 零侵入性，零依赖
+ * 在开发态与运行态保持一致
 
-TODO: more technology details
+在实际开发过程中，我们还参考了Maven所使用的Plexus IOC容器，甚至直接使用了其底层的Classworlds做Jar之间的Class Path管理。
+
+TODO: 更多的技术阐述。
