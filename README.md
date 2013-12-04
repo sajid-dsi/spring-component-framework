@@ -720,6 +720,12 @@ I think OSGi's complexity comes from runtime dynamic ability, it try to help me 
 
 But I don't want a so powerful and terrible man, I just need a normal man who can be borned, play and dead then.
 
+But it doesn't means, application based on this framework can't be dynamical, I leave this choice to application developer.
+
+Because we use spring as IOC container, maven as dependencies management tool, so we bind springframework as inner application container, maven as develop/runtime dependencies management. 
+
+We referred to the IOC container of maven: Plexus, and we use its ClassWorlds as jar's class path manager.
+
 About the spring-plugin, I have referred it when I finish this project, but I think we have different concerns, it seems to enhance the application in just one application context cross many jars, just like normal spring app does.
 
 That is to say, it take care about connectivity more than isolation (in my opinion).
@@ -749,7 +755,5 @@ The Spring Component Framework is designed to be:
  * Developer friendly
  * Zero invasion
  * Consistent in anytime from any aspects
-
-We referred to the IOC container of maven: Plexus, and we use its ClassWorlds as jar's class path manager.
 
 TODO: more technology details

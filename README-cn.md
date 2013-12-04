@@ -343,7 +343,8 @@ public class CLI {
 
 #### 1. 静态组件
 
-由于API项目在运行时实际没有主动创建/管理任何Java对象实例，它仅仅是提供一些接口/静态函数，常量给其他模块使用
+由于API项目在运行时没有主动创建/管理任何Java对象实例，它仅仅是提供一些接口/静态函数，常量给其他模块使用
+
   所以我们视其为 **静态** 组件。
   静态组件包应该被打包成为如下格式：
 
@@ -365,7 +366,7 @@ Spring Component Framework在运行时，会根据META-INF/pom.xml文件的定义，为其解析相
 #### 2. 应用组件
 
 示例的客户端是作为一个独立的运行时程序运行，它通过RMI暴露服务给服务器调用（而不是进程内依赖）。
-组件规范规定，开发者应该提供一个application.xml在META-INF目录下，用Spring Context对这些Bean加以管理。
+组件规范规定，开发者应该在META-INF目录下配置一个application.xml，用Spring Context对这些Bean加以管理。
 
 我们将其定义为 **应用** 组件
 
@@ -693,7 +694,14 @@ mvn package
 
 此时Client与Server已经准备就绪，支持在Windows或Linux下运行。
 
-3. 技术原理
+3. 扩展组件
+------------
+
+### 3.1 定义一种扩展组件
+### 3.2 解析扩展组件
+### 3.3 为组件框架中运行时注入扩展机制
+
+4. 技术原理
 ---------------
 
 有人会有疑问，已经有OSGi规范了，还有许多不同实现，Spring系列中，还有一个Spring DM Server，为什么还要再发明一个组件/插件框架的轮子？
@@ -702,19 +710,24 @@ mvn package
 
 我个人在工作中，曾经尝试基于OSGi开发一些应用，但其实在是过于复杂，引入了太多的概念，工具，约束；我甚至连调试OSGi应用程序的勇气都没了。
 
-在OSGi的泥潭里面挣扎时，我认识到，OSGi的复杂性，主要来源于其运行时的动态性；
+在OSGi的泥潭里面挣扎时，我认识到，OSGi的复杂性，主要来源于其运行时的动态性：
 
-我仅仅需要一个简单，清晰的组件框架，打个比方，我仅需要制造一个正常的机器人，它可以开机，运行，而后关机。
+而我仅仅需要一个简单，清晰的组件框架，打个比方，我仅需要制造一个正常的机器人，它可以开机，运行，而后关机。
 
-但使用了OSGi，它试图让我们制造一个更强大的机器人，它不仅仅可以开/关机，运行，还能在运行时把自己的胳膊，腿卸下来，换一个新的！
+但使用了OSGi，它试图一开始就让我制造一个更强大的机器人，它不仅仅可以开/关机，运行，还能在运行时把自己的胳膊，腿卸下来，换一个新的！
 
-About the spring-plugin, I have referred it when I finish this project, but I think we have different concerns, it seems to enhance the application in just one application context cross many jars, just like normal spring app does.
+但这并不意味着基于Spring Component Framework开发的程序无法实现这种动态性；我们认为实现这种动态性是最终应用开发者的责任，我们把选择权交给最终开发者。
+
+另外，由于一直基于Spring Framework搭建项目框架，使用Maven进行项目组织，我猜想这两个框架/工具是java项目的主流
+
+所以，本组件框架把jar包内部的对象管理直接限定在使用Spring，而把依赖管理绑定在Maven的战车上。
+
+在实际开发过程中，我们还参考了Maven所使用的Plexus IOC容器，甚至直接使用了其底层的Classworlds做Jar之间的Class Path管理。
+
 关于Spring Plugin，我在开发本组件框架之前，对其进行了考察，但我发现Spring-Plugin与本项目有着不同的关注点。
 
-That is to say, it take care about connectivity more than isolation (in my opinion).
 我认为，spring-plugin更关注程序之间的 **连接性** ，而Spring Component Framework更关注 **隔离性** 
 
-below is the example application context configuration I copied from it's README.
 如下是从Spring Plugin的README中copy来的示例配置：
 
 ```xml
@@ -743,7 +756,5 @@ below is the example application context configuration I copied from it's README
  * 开发者友好（不要引入太多的概念）
  * 零侵入性，零依赖
  * 在开发态与运行态保持一致
-
-在实际开发过程中，我们还参考了Maven所使用的Plexus IOC容器，甚至直接使用了其底层的Classworlds做Jar之间的Class Path管理。
 
 TODO: 更多的技术阐述。
