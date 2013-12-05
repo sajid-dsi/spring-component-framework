@@ -167,16 +167,19 @@ public class AppLauncher extends Launcher implements Executable {
      * @throws Exception
      */
     private void exportAsRMI() throws Exception {
+        String appHost = System.getProperty("app.host");
+        String appPort = System.getProperty("app.port");
         RmiServiceExporter exporter = new RmiServiceExporter();
         exporter.setServiceInterface(Executable.class);
         String serviceName = getAppName() + "Launcher";
+        //exporter.setRegistryHost(appHost);
+        exporter.setRegistryPort(Integer.valueOf(appPort));
         exporter.setServiceName(serviceName);
-        int servicePort = Integer.parseInt(System.getProperty("app.port", "1099"));
-        exporter.setRegistryPort(servicePort);
         exporter.setService(this);
         exporter.afterPropertiesSet();
-        //exporter.setBeanClassLoader(this.pomWorld.getMainRealm());
-        logger.info(banner("Export Executable Service at rmi://localhost:{}/{}", servicePort , serviceName));
+
+        String serviceUrl = String.format("rmi://%s:%s/%s", appHost, appPort, serviceName);
+        logger.info(banner("Export Executable Service at {}", serviceUrl));
     }
 
     private void addShutdownHook() {

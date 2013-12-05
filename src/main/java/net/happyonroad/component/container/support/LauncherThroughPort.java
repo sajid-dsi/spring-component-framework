@@ -42,7 +42,7 @@ public class LauncherThroughPort implements Executable {
         try {
             remote.exit();
         } catch (Exception e) {
-            //skip it, because the remote server maybe exit
+            System.out.println("Can't exit remote program, because of:" + e.getMessage());
         }
     }
 

@@ -42,9 +42,16 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
             System.setProperty("app.home", home);
             logger.warn("app.home is not set, use user.dir as app.home: {}", home);
         }
-        String launchPort = System.getProperty("app.port");
-        if (!StringUtils.hasText(launchPort)) {
-            System.setProperty("app.port", "1099");
+        String appHost = System.getProperty("app.host");
+        if (!StringUtils.hasText(appHost)) {
+            appHost = "localhost";
+            System.setProperty("app.host", appHost);
+            logger.warn("app.host is not set, use localhost as default");
+        }
+        String appPort = System.getProperty("app.port");
+        if (!StringUtils.hasText(appPort)) {
+            appPort = "1099";
+            System.setProperty("app.port", appPort);
             logger.warn("app.port is not set, use 1099 as default");
         }
         repository = createComponentRepository(home);
@@ -104,13 +111,6 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         int mode;
         List<String> list = new ArrayList<String>(args.length);
         Collections.addAll(list, args);
-        if (list.contains("--stop")) {
-            mode = MODE_STOP;
-        } else if (list.contains("--reload")) {
-            mode = MODE_RELOAD;
-        } else {
-            mode = MODE_START;
-        }
         String host = null;
         int port = 0;
         if (list.contains("--host")) {
@@ -118,6 +118,23 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         }
         if (list.contains("--port")) {
             port = Integer.parseInt(list.get(list.indexOf("--port") + 1));
+        }
+        if (list.contains("--stop")) {
+            mode = MODE_STOP;
+            if(host == null)
+                host = "localhost";
+            if(port == 0)
+                port = Integer.valueOf(System.getProperty("app.port", "1099"));
+        } else if (list.contains("--reload")) {
+            mode = MODE_RELOAD;
+            if(host == null)
+                host = "localhost";
+            if(port == 0)
+                port = Integer.valueOf(System.getProperty("app.port", "1099"));
+        } else {
+            mode = MODE_START;
+            host = null;
+            port = 0;
         }
         Executable executable = configure(launcher, host, port);
         try {
