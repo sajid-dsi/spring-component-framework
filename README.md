@@ -716,6 +716,7 @@ you should saw your app is built like below:
 and your client and server is ready for start or stop by corresponding start/stop (bat|sh) file.
 
 3. Extended
+---------------
 
 ### 3.1 Define an extended component type
 ### 3.2 Resolve the extended component
