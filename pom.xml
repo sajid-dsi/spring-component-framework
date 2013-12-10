@@ -4,7 +4,7 @@
     <parent>
         <groupId>net.happyonroad</groupId>
         <artifactId>spring-component-parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.0.1</version>
     </parent>
 
     <artifactId>spring-component-framework</artifactId>
@@ -21,7 +21,8 @@
     <scm>
         <connection>scm:git:git@github.com:Kadvin/spring-component-framework.git</connection>
         <developerConnection>scm:git:git@github.com:Kadvin/spring-component-framework.git</developerConnection>
-    </scm>
+      <tag>REL-0.0.1</tag>
+  </scm>
 
     <dependencies>
         <dependency>
