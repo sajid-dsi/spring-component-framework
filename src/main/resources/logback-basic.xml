@@ -15,9 +15,9 @@
     </root>
 
     <logger name="ch.qos.logback" level="ERROR"/>
-    <logger name="org" level="INFO"/>
-    <logger name="com" level="INFO"/>
-    <logger name="net" level="INFO"/>
+    <logger name="org" level="WARN"/>
+    <logger name="com" level="WARN"/>
+    <logger name="net" level="WARN"/>
     <logger name="DataNucleus" level="WARN"/>
     <logger name="org.apache" level="INFO"/>
     <logger name="org.apache.commons.httpclient" level="ERROR"/>
@@ -26,7 +26,7 @@
     <logger name="com.mchange.v2" level="ERROR"/>
     <logger name="com.mchange.v2.resourcepool.BasicResourcePool" level="ERROR"/>
     <logger name="com.mchange.v2.c3p0" level="ERROR"/>
-
-    <logger name="dnt" level="INFO"/>
-    <logger name="dnt.component" level="DEBUG"/>
+    
+    <logger name="net.happyonroad" level="INFO"/>
+    <logger name="net.happyonroad.spring" level="WARN"/>
 </included>

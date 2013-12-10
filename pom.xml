@@ -4,11 +4,10 @@
     <parent>
         <groupId>net.happyonroad</groupId>
         <artifactId>spring-component-parent</artifactId>
-        <version>0.0.1</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>spring-component-framework</artifactId>
-  <version>0.0.2-SNAPSHOT</version>
 
     <name>Spring Component Framework</name>
     <url>http://github.com/Kadvin/spring-component-framework</url>
@@ -22,8 +21,7 @@
     <scm>
         <connection>scm:git:git@github.com:Kadvin/spring-component-framework.git</connection>
         <developerConnection>scm:git:git@github.com:Kadvin/spring-component-framework.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+    </scm>
 
     <dependencies>
         <dependency>

@@ -1,4 +1,3 @@
 <configuration >
     <include resource="logback-basic.xml"/>
-    <logger name="dnt.component" level="INFO"/>
 </configuration>
