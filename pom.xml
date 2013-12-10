@@ -1,10 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-      <groupId>net.happyonroad</groupId>
-      <artifactId>spring-component-parent</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+        <groupId>net.happyonroad</groupId>
+        <artifactId>spring-component-parent</artifactId>
+        <version>0.0.1</version>
     </parent>
 
     <artifactId>spring-component-framework</artifactId>
@@ -19,8 +20,9 @@
     </description>
 
     <scm>
-        <connection>scm:git:https://github.com/Kadvin/spring-component-framework.git</connection>
-        <developerConnection>scm:git:https://github.com/Kadvin/spring-component-framework.git</developerConnection>
+        <connection>scm:git:git@github.com/Kadvin/spring-component-framework.git</connection>
+        <developerConnection>scm:git:git@github.com/Kadvin/spring-component-framework.git</developerConnection>
+        <tag>spring-component-parent-0.0.1</tag>
     </scm>
 
     <dependencies>
@@ -145,7 +147,8 @@
                         </goals>
                         <configuration>
                             <target>
-                                <copy file="${project.basedir}/pom.xml" tofile="${project.basedir}/target/classes/META-INF/pom.xml" overwrite="true" />
+                                <copy file="${project.basedir}/pom.xml"
+                                      tofile="${project.basedir}/target/classes/META-INF/pom.xml" overwrite="true"/>
                             </target>
                         </configuration>
                     </execution>
