@@ -29,9 +29,13 @@ public class SpringClassPathBeanDefinitionScanner extends ClassPathBeanDefinitio
     public Set<BeanDefinition> findCandidateComponents(String basePackage) {
         Set<BeanDefinition> candidates = new LinkedHashSet<BeanDefinition>();
         try {
+            ResourcePatternResolver resolver = getResourcePatternResolver();
+            if (!(resolver instanceof ComponentApplicationContext)){
+                return super.findCandidateComponents(basePackage);
+            }
             String packageSearchPath = SpringPathMatchingResourcePatternResolver.CLASSPATH_THIS_URL_PREFIX +
                                        resolveBasePackage(basePackage) + "/" + getResourcePattern();
-            Resource[] resources = getResourcePatternResolver().getResources(packageSearchPath);
+            Resource[] resources = resolver.getResources(packageSearchPath);
             boolean traceEnabled = logger.isTraceEnabled();
             boolean debugEnabled = logger.isDebugEnabled();
             for (Resource resource : resources) {
