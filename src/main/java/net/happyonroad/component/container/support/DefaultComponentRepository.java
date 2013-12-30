@@ -83,6 +83,9 @@ public class DefaultComponentRepository implements MutableComponentRepository {
             jars = new File[0]; /*也可能在boot或lib目录下没有jar*/
         logger.debug("Scanning {}", folder.getAbsolutePath());
         for (File jar : jars) {
+            if(jar.getPath().endsWith("-sources.jar")){
+                logger.trace("Skip sources {}", jar.getPath());
+            }
             Dependency dependency = Dependency.parse(jar.getName());
             ComponentJarResource resource = new ComponentJarResource(jar);
             InputStream stream = null;

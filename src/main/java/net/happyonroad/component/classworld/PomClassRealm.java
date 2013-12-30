@@ -118,7 +118,26 @@ public class PomClassRealm extends ClassRealm implements Comparable<PomClassReal
         return this.component.compareTo(another.component);
     }
 
-    //    protected void createModuleRealms() {
+    @Override
+    public Enumeration<URL> getResources(String name) throws IOException {
+        // In order to covert the spring namespace handlers
+        if("META-INF/spring.handlers".equals(name)){
+            return reverse(super.getResources(name));
+        }else
+            return super.getResources(name);
+    }
+
+    private Enumeration<URL> reverse(Enumeration<URL> resources) {
+        ArrayList<URL> reverted = new ArrayList<URL>();
+        while (resources.hasMoreElements()) {
+            URL url = resources.nextElement();
+            reverted.add(url);
+        }
+        Collections.reverse(reverted);
+        return Collections.enumeration(reverted);
+    }
+
+//    protected void createModuleRealms() {
 //        moduleRealms = new TreeSet<ClassRealm>();
 //        if(component.getModules() != null && component.getModules().isEmpty()){
 //            for(Component module : component.getModules()){

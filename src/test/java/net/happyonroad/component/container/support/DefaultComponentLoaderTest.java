@@ -8,6 +8,7 @@ import net.happyonroad.component.classworld.PomClassWorld;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.util.TempFile;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Jar;
 import org.junit.*;
@@ -17,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.Collection;
 
 /** 组件加载器的测试 */
 public class DefaultComponentLoaderTest {
@@ -34,18 +36,24 @@ public class DefaultComponentLoaderTest {
         tempFolder = TempFile.tempFolder();
 
         createPom("comp_0", "spring.test-0.0.1", tempFolder);
+        if("create".equals(System.getProperty("spring.test.action", "copy") )){
+            createJar("comp_1", "spring.test.comp_1-0.0.1", "spring/test/api", tempFolder);
+            createJar("comp_2", "spring.test.comp_2-0.0.1", "spring/test/standalone", tempFolder);
+            createJar("comp_3", "spring.test.comp_3-0.0.1", "spring/test/provider", tempFolder);
+            createJar("comp_4", "spring.test.comp_4-0.0.1", "spring/test/user", tempFolder);
+            createJar("comp_5", "spring.test.comp_5-0.0.1", "spring/test/mixed", tempFolder);
+            createJar("comp_6", "spring.test.comp_6-0.0.1", "spring/test/scan", tempFolder, new Filter("Provider"));
+            createJar("comp_7", "spring.test.comp_7-0.0.1", "spring/test/scan", tempFolder, new Filter("User"));
+        }else{
+            copyJar("spring.test.comp_1-0.0.1", tempFolder);
+            copyJar("spring.test.comp_2-0.0.1", tempFolder);
+            copyJar("spring.test.comp_3-0.0.1", tempFolder);
+            copyJar("spring.test.comp_4-0.0.1", tempFolder);
+            copyJar("spring.test.comp_5-0.0.1", tempFolder);
+            copyJar("spring.test.comp_6-0.0.1", tempFolder);
+            copyJar("spring.test.comp_7-0.0.1", tempFolder);
+        }
 
-        copyJar("spring.test.comp_1-0.0.1", tempFolder);
-        copyJar("spring.test.comp_2-0.0.1", tempFolder);
-        copyJar("spring.test.comp_3-0.0.1", tempFolder);
-        copyJar("spring.test.comp_4-0.0.1", tempFolder);
-        copyJar("spring.test.comp_5-0.0.1", tempFolder);
-
-//        createJar("comp_1", "spring.test.comp_1-0.0.1", "spring/test/api", tempFolder);
-//        createJar("comp_2", "spring.test.comp_2-0.0.1", "spring/test/standalone", tempFolder);
-//        createJar("comp_3", "spring.test.comp_3-0.0.1", "spring/test/provider", tempFolder);
-//        createJar("comp_4", "spring.test.comp_4-0.0.1", "spring/test/user", tempFolder);
-//        createJar("comp_5", "spring.test.comp_5-0.0.1", "spring/test/mixed", tempFolder);
     }
 
     @AfterClass
@@ -239,7 +247,35 @@ public class DefaultComponentLoaderTest {
         String message = (String) invokeWork(serviceUser);
         Assert.assertTrue(message.contains("[ MixedServiceUser ] message by test"));
         Assert.assertTrue(message.contains("[ MixedServiceUser ] message by mixed"));
+    }
 
+    /**
+     * <dl>
+     * <dt>Purpose:</dt>
+     * <dd>Spring components scanner(context:component-scan) behavior </dd>
+     * <dt>Assumption:</dt>
+     * <dd>There are two service components:</dd>
+     * <dd>component-1: spring.test.scan.Provider (exported service)</dd>
+     * <dd>component-2: spring.test.scan.User (depends service: provider)</dd>
+     * <dt>Verification:</dt>
+     * <dd>component-2 scanner won't instantiate the component-1's provider</dd>
+     * <dd>component-2 scanner depends on component-1's provider by service</dd>
+     * </dl>
+     *
+     * @throws Exception Any Exception
+     */
+    @Test
+    public void testScanComponents() throws Exception {
+        target = repository.resolveComponent("spring.test.comp_7-0.0.1");
+        PomClassRealm realm = world.newRealm(target);
+        loader.load(target);
+        Assert.assertTrue(loader.isLoaded(target));
+        ApplicationContext context = loader.getApplicationFeature(target);
+        Assert.assertNotNull(context);
+        Class suClass = realm.loadClass("spring.test.scan.User");
+        Object user = context.getBean(suClass);
+        String message = (String) invokeWork(user);
+        Assert.assertEquals("Work by provider: 1/1", message);
     }
 
     private static void createPom(String folder, String compName, File root) throws IOException {
@@ -249,22 +285,29 @@ public class DefaultComponentLoaderTest {
         FileUtils.copyURLToFile(source, destination);
     }
 
-    @SuppressWarnings("unused")
     private static void copyJar(String name, File tempFolder)throws IOException{
         URL jar = DefaultComponentLoaderTest.class.getClassLoader().getResource("jars/"+ name + ".jar");
         File file = new File(tempFolder, "lib/" + name + ".jar");
         FileUtils.copyURLToFile(jar, file );
     }
 
-    @SuppressWarnings("unused")
     private static void createJar(String folder, String compName, String classPath, File root) throws IOException {
+        createJar(folder, compName, classPath, root, null);
+    }
+
+    private static void createJar(String folder, String compName, String classPath, File root, IOFileFilter filter) throws IOException {
         URL metaInf = DefaultComponentLoaderTest.class.getClassLoader().getResource(folder);
         URL classes = DefaultComponentLoaderTest.class.getClassLoader().getResource(classPath);
         assert metaInf != null;
         assert classes != null;
         File destination = new File(root, "temp/" + compName);
         FileUtils.copyDirectory(new File(metaInf.getPath()), destination);
-        FileUtils.copyDirectory(new File(classes.getPath()), new File(destination, classPath));
+        //FileUtils.copyDirectory(new File(classes.getPath()), new File(destination, classPath));
+        Collection<File> classesFiles = FileUtils.listFiles(new File(classes.getPath()), new String[]{"class"}, true);
+        for (File classesFile : classesFiles) {
+            if( filter != null && !filter.accept(classesFile))continue;
+            FileUtils.copyFileToDirectory(classesFile, new File(destination, classPath ));
+        }
         File file = new File(root, "lib/" + compName + ".jar");
         Jar jar = new Jar();
         jar.setProject(project);
@@ -289,6 +332,24 @@ public class DefaultComponentLoaderTest {
         }catch (Exception ex){
             ex.printStackTrace();
             return null;
+        }
+    }
+
+    private static class Filter implements IOFileFilter{
+        private String prefix;
+
+        private Filter(String prefix) {
+            this.prefix = prefix;
+        }
+
+        @Override
+        public boolean accept(File file) {
+            return file.getName().startsWith(prefix);
+        }
+
+        @Override
+        public boolean accept(File dir, String name) {
+            return true;
         }
     }
 }

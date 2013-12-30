@@ -3,6 +3,8 @@
  */
 package net.happyonroad.component.core;
 
+import org.springframework.core.io.Resource;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.jar.Manifest;
@@ -46,4 +48,8 @@ public abstract class ComponentResource {
     public abstract boolean exists(String relativePath);
 
     public abstract void close();
+
+    //获取某个目录下所有的资源
+    // 如果传入的是文件名称，则返回该文件对应的资源
+    public abstract Resource[] getLocalResourcesUnder(String path);
 }

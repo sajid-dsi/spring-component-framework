@@ -1,10 +1,10 @@
 /**
  * @author XiongJie, Date: 13-10-30
  */
-package net.happyonroad.spring.test.mixed;
+package spring.test.mixed;
 
-import net.happyonroad.spring.test.api.ServiceProvider;
-import net.happyonroad.spring.test.api.ServiceUser;
+import spring.test.api.ServiceProvider;
+import spring.test.api.ServiceUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

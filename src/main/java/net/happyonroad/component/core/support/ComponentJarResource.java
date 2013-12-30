@@ -5,10 +5,15 @@ package net.happyonroad.component.core.support;
 
 import net.happyonroad.component.core.ComponentResource;
 import net.happyonroad.component.core.exception.ResourceNotFoundException;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -32,6 +37,7 @@ public class ComponentJarResource extends ComponentResource {
     // 额外扩展的对外方法
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("UnusedDeclaration")
     public File getFile() {
         return new File(file.getName());
     }
@@ -60,5 +66,24 @@ public class ComponentJarResource extends ComponentResource {
     @Override
     public boolean exists(String relativePath) {
         return null != file.getJarEntry(relativePath);
+    }
+
+    @Override
+    public Resource[] getLocalResourcesUnder(String path) {
+        Set<Resource> matches = new HashSet<Resource>();
+        Enumeration<JarEntry> entries = file.entries();
+        while (entries.hasMoreElements()) {
+            JarEntry entry = entries.nextElement();
+            if(entry.getName().startsWith(path)) {
+                try {
+
+                    UrlResource resource = new UrlResource("jar:file:/" + file.getName() +"!/" + entry.getName());
+                    matches.add(resource);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return matches.toArray(new Resource[matches.size()]);
     }
 }

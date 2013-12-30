@@ -15,6 +15,8 @@ import org.springframework.context.annotation.ComponentScanBeanDefinitionParser;
 public class SpringComponentScanDefinitionParser extends ComponentScanBeanDefinitionParser {
     @Override
     protected ClassPathBeanDefinitionScanner createScanner(XmlReaderContext readerContext, boolean useDefaultFilters) {
-        return super.createScanner(readerContext, useDefaultFilters);
+        return new SpringClassPathBeanDefinitionScanner(readerContext.getRegistry(), useDefaultFilters);
     }
+
+
 }

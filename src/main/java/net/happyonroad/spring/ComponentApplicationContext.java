@@ -9,14 +9,18 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.PropertyResourceConfigurer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericXmlApplicationContext;
+import org.springframework.core.io.support.ResourcePatternResolver;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /** Description */
 public class ComponentApplicationContext extends GenericXmlApplicationContext {
+    private final Component component;
+
     public ComponentApplicationContext(Component component, ClassRealm realm, ApplicationContext parent) {
         this.setParent(parent); /*It accept null*/
+        this.component = component;
         if (parent != null) {
             try {
                 //把上级context的属性配置器加到当前这个上下文的post processor里面来
@@ -40,5 +44,14 @@ public class ComponentApplicationContext extends GenericXmlApplicationContext {
         if(context.getParent()!=null){
             digPRC(context.getParent(), container);
         }
+    }
+
+    @Override
+    protected ResourcePatternResolver getResourcePatternResolver() {
+        return new SpringPathMatchingResourcePatternResolver(this);
+    }
+
+    public Component getComponent() {
+        return component;
     }
 }
