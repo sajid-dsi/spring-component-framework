@@ -183,10 +183,24 @@ public class DependencyTest extends TestCase {
      * @throws Exception
      */
      public void testNewDependencyByVersionWithClassifier()throws Exception{
-         Dependency dependency = new Dependency("org.springframework", "net.happyonroad.spring-context", "3.2.4.RELEASE");
+         Dependency dependency = new Dependency("org.springframework", "spring-context", "3.2.4.RELEASE");
          assertEquals("org.springframework", dependency.getGroupId());
-         assertEquals("net.happyonroad.spring-context", dependency.getArtifactId());
+         assertEquals("spring-context", dependency.getArtifactId());
          assertEquals("3.2.4", dependency.getVersion());
          assertEquals("RELEASE", dependency.getClassifier());
      }
+
+    /**
+     * 测试目的：
+     *   对于在artifact中也包含点的组件，能够将其artifactId中的信息转移到groupId中
+     * 验证方式：
+     *   解析出来，groupId, artifactId, version, classifier被正确设置
+     * @throws Exception
+     */
+    public void testConvertArtifactWithDotAsNormal() throws Exception {
+        Dependency dependency = new Dependency("javax.servlet", "javax.servlet-api", "3.1.0");
+        assertEquals("javax.servlet.javax", dependency.getGroupId());
+        assertEquals("servlet-api", dependency.getArtifactId());
+        assertEquals("3.1.0", dependency.getVersion());
+    }
 }

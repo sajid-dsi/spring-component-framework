@@ -386,6 +386,23 @@ public class DefaultComponentResolverTest extends TestCase {
         }
     }
 
+    /**
+     * 测试目的：
+     *   测试artifactId中包含点号的组件，能被解析出来，并将多余的信息转移到groupId中
+     * @throws Exception
+     */
+    public void testResolveComponentWithAbnormalArtifactId() throws Exception {
+        Component theParent = new DefaultComponent("net.java", "jvnet-parent", "3", null, "pom");
+        repository.addComponent(theParent);
+
+        File pomFile = getResourceFile("poms/javax.servlet.javax.servlet-api-3.1.0.pom");
+        Dependency dependency = Dependency.parse("javax.servlet.javax.servlet-api-3.1.0.pom");
+        Component component = resolver.resolveComponent(dependency, pomFile);
+        assertEquals("javax.servlet.javax", component.getGroupId());
+        assertEquals("servlet-api", component.getArtifactId());
+        assertEquals("3.1.0", component.getVersion());
+    }
+
     // ------------------------------------------------------------
     // 测试用例支持方法
     // ------------------------------------------------------------

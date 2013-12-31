@@ -40,13 +40,17 @@ public class Dependency implements Versionize{
     }
 
     public Dependency(String groupId, String artifactId) {
-        this.groupId = groupId;
-        this.artifactId = artifactId;
+        this(groupId, artifactId, null);
     }
 
     public Dependency(String groupId, String artifactId, String version) {
         this.groupId = groupId;
         this.artifactId = artifactId;
+        if(artifactId.indexOf(".") > 0 ){
+            int position = artifactId.lastIndexOf('.');
+            this.artifactId = artifactId.substring(position+1);
+            this.groupId = groupId + "." + artifactId.substring(0, position);
+        }
         setVersion(version);
     }
 
@@ -94,9 +98,11 @@ public class Dependency implements Versionize{
     }
 
     public void setVersion(String version) {
-        String[] versionAndClassifier = splitClassifierFromVersion(version, new StringBuilder());
-        this.version = versionAndClassifier[0];
-        this.setClassifier(versionAndClassifier[1]);
+        if(version != null ){
+            String[] versionAndClassifier = splitClassifierFromVersion(version, new StringBuilder());
+            this.version = versionAndClassifier[0];
+            this.setClassifier(versionAndClassifier[1]);
+        }
     }
 
 

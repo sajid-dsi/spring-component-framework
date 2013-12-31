@@ -77,6 +77,16 @@ public class DefaultComponentResolver implements ComponentResolver {
                 component.splitVersionAndClassifier();
             }
         }
+        //竟然有一些组件，其artifactId中含有 .
+        //如：Jetty Server依赖的 gid = javax.servlet, aid = javax.servlet-api
+        // 我采取的策略是，将其点号之前的artifactId放到groupId中
+        String artifactId = component.getArtifactId();
+        if(artifactId.indexOf(".") > 0 ){
+            int position = artifactId.lastIndexOf('.');
+            String extra = artifactId.substring(0, position);
+            component.setArtifactId(artifactId.substring(position + 1));
+            component.setGroupId(component.getGroupId() + "." + extra);
+        }
         if(!component.isSnapshot())
             component.setRelease(true);//缺省解析出来的都是release的
         if (component.getType() == null)
