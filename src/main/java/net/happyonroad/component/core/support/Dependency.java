@@ -127,6 +127,7 @@ public class Dependency implements Versionize{
         return Component.SCOPE_TEST.equalsIgnoreCase(getScope());
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public boolean isRuntime(){
         return Component.SCOPE_RUNTIME.equalsIgnoreCase(getScope());
     }
@@ -343,6 +344,7 @@ public class Dependency implements Versionize{
         if (!groupId.equals(that.groupId)) {
             return false;
         }
+        //noinspection RedundantIfStatement
         if (version != null ? !version.equals(that.version) : that.version != null) {
             return false;
         }
@@ -391,5 +393,14 @@ public class Dependency implements Versionize{
         if(version != null ) this.setVersion(component.interpolate(version)) ;
         if(classifier != null ) this.classifier = component.interpolate(classifier);
         if(scope != null ) this.scope = component.interpolate(scope);
+    }
+
+    public void reform() {
+        if(artifactId.indexOf(".") > 0 ){
+            String badArtifactId = this.artifactId;
+            int position = badArtifactId.lastIndexOf('.');
+            this.artifactId = badArtifactId.substring(position+1);
+            this.groupId = groupId + "." + badArtifactId.substring(0, position);
+        }
     }
 }

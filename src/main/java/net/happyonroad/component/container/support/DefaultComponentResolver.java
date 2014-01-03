@@ -197,6 +197,7 @@ public class DefaultComponentResolver implements ComponentResolver {
             List<Dependency> dependencies = component.getDependencies();
             List<Component> dependedComponents = new ArrayList<Component>(dependencies.size());
             for (Dependency depended : dependencies) {
+                depended.reform();//move the artifactId prefix with dot into group Id
                 if (dependency.exclude(depended)) {
                     logger.trace("Skip excluded {}", depended);
                     continue;

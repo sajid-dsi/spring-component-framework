@@ -76,8 +76,7 @@ public class ComponentJarResource extends ComponentResource {
             JarEntry entry = entries.nextElement();
             if(entry.getName().startsWith(path)) {
                 try {
-
-                    UrlResource resource = new UrlResource("jar:file:/" + file.getName() +"!/" + entry.getName());
+                    UrlResource resource = new UrlResource("jar:file:" + file.getName() +"!/" + entry.getName());
                     matches.add(resource);
                 } catch (IOException e) {
                     e.printStackTrace();
