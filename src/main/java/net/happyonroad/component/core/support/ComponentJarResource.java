@@ -65,7 +65,11 @@ public class ComponentJarResource extends ComponentResource {
 
     @Override
     public boolean exists(String relativePath) {
-        return null != file.getJarEntry(relativePath);
+        try {
+            return null != file.getJarEntry(relativePath);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override

@@ -5,6 +5,7 @@ package net.happyonroad.spring;
 
 import net.happyonroad.component.container.MutableServiceRegistry;
 import net.happyonroad.component.container.ServiceRegistry;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -39,11 +40,13 @@ public class SpringServiceExporter extends SpringServiceProxy {
      */
     public void exportService(MutableServiceRegistry serviceRegistry, ApplicationContext componentContext)
             throws ServiceConfigurationException {
-        Object service = getServiceReference(componentContext);
-        if (service == null) {
+        Object service = null;
+        try {
+            service = getServiceReference(componentContext);
+        } catch (NoSuchBeanDefinitionException e) {
             throw new ServiceConfigurationException(
-                    "The service ref " + getRef() + " can't been found in " +
-                    componentContext.getDisplayName() + "!");
+                    "The service ref = " + getRef() + ", type = " + getRole() + " can't been found in " +
+                    componentContext.getDisplayName() + "!", e);
         }
         logger.debug("Export {} -> {} from {} to service registry", this, service, componentContext.getDisplayName());
         serviceRegistry.register(getRoleClass(), service, getHint());
