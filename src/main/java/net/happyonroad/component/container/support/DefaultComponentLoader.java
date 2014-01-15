@@ -3,7 +3,6 @@
  */
 package net.happyonroad.component.container.support;
 
-import net.happyonroad.component.classworld.PomClassRealm;
 import net.happyonroad.component.classworld.PomClassWorld;
 import net.happyonroad.component.container.ComponentLoader;
 import net.happyonroad.component.container.ComponentRepository;
@@ -34,7 +33,9 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     /*package*/ final ServiceRegistry          registry;
     /*package*/ final ComponentRepository      repository;
 
-    public DefaultComponentLoader(ComponentRepository repository, PomClassWorld world) {
+    public DefaultComponentLoader(ComponentRepository repository,
+                                  PomClassWorld world,
+                                  FeatureResolver... resolvers) {
         this.world = world;
         this.repository = repository;
         loadedFeatures = new ConcurrentHashMap<Component, Features>();
@@ -44,6 +45,10 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         registerResolver(new StaticFeatureResolver().bind(this));
         registerResolver(new ApplicationFeatureResolver().bind(this));
         registerResolver(new ServiceFeatureResolver().bind(this));
+        //注册构造时传入的扩展Feature Resolvers
+        for (FeatureResolver resolver : resolvers) {
+            registerResolver(resolver.bind(this));
+        }
     }
 
     /**
@@ -120,8 +125,8 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     }
 
     @Override
-    public PomClassRealm getMainClassLoader() {
-        return world.getMainRealm();
+    public PomClassWorld getWorld() {
+        return world;
     }
 
     /**

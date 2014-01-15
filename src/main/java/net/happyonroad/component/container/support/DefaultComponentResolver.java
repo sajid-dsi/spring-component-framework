@@ -363,7 +363,7 @@ public class DefaultComponentResolver implements ComponentResolver {
 
     protected File digJarFilePath(File pomFile) {
         String[] folders = {"lib", "repository", "boot"};
-        String home = System.getProperty("app.home");
+        String home = repository.getHome();
         for (String folder : folders) {
             String path = String.format("%s/%s/%s", home, folder, pomFile.getName());
             path = path.replace(".pom", ".jar");

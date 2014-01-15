@@ -14,8 +14,10 @@ import net.happyonroad.component.core.support.ComponentJarResource;
 import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.component.core.support.Dependency;
 import net.happyonroad.util.FilenameFilterBySuffix;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -29,7 +31,7 @@ import static net.happyonroad.util.LogUtils.banner;
  * 组件仓库
  * 请注意，该对象的工作依赖系统环境变量 app.home
  */
-public class DefaultComponentRepository implements MutableComponentRepository {
+public class DefaultComponentRepository implements MutableComponentRepository, SmartLifecycle {
     private static FilenameFilter jarFilter = new FilenameFilterBySuffix(".jar");
     private static FilenameFilter pomFilter = new FilenameFilterBySuffix(".pom");
 
@@ -40,6 +42,7 @@ public class DefaultComponentRepository implements MutableComponentRepository {
     private Map<Dependency, File> cache;
 
     /*package*/ ComponentResolver resolver;
+    private boolean running;
 
     /**
      * 构建一个缺省组件仓库
@@ -49,8 +52,14 @@ public class DefaultComponentRepository implements MutableComponentRepository {
     public DefaultComponentRepository(String home) {
         this.home = new File(home);
         File libFolder = new File(home, "lib");
-        if (!libFolder.exists())
-            throw new IllegalArgumentException("The lib folder [" + libFolder.getPath() + "] is not exist");
+        if (!libFolder.exists()) {
+            try {
+                FileUtils.forceMkdir(libFolder);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("The lib folder [" + libFolder.getPath()
+                                                   + "] not exist and can't be auto created: " + e.getMessage());
+            }
+        }
         components = new HashSet<Component>();
         cache = new HashMap<Dependency, File>();
         resolver = new DefaultComponentResolver(this);
@@ -60,20 +69,60 @@ public class DefaultComponentRepository implements MutableComponentRepository {
     //     本身的Lifecycle方法
     // ------------------------------------------------------------
 
+    @Override
+    public boolean isAutoStartup() {
+        return true;
+    }
+
+    @Override
+    public void stop(Runnable callback) {
+        stop();
+        if (callback != null) {
+            try {
+                callback.run();
+            } catch (Exception e) {
+                logger.error("Failed to run callback", e);
+            }
+        }
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
+    public int getPhase() {
+        return 5;
+    }
+
     /** 启动时预加载 lib目录, lib/poms 下所有的组件信息 */
-    public void start() throws Exception {
+    public void start()  {
         logger.info(banner("Scanning jars"));
         //先寻找 boot/*.jar，将其预加载为component
         File bootFolder = new File(home, "boot");
-        scanJars(bootFolder);
+        try {
+            scanJars(bootFolder);
+        } catch (Exception e) {
+            logger.error("Failed to scan {} dir: {}", bootFolder, e.getMessage());
+        }
 
         //再寻找 lib/*.jar，将其预加载为component
         File libFolder = new File(home, "lib");
-        scanJars(libFolder);
+        try {
+            scanJars(libFolder);
+        } catch (Exception e) {
+            logger.error("Failed to scan {} dir: {}", bootFolder, e.getMessage());
+        }
 
         //最后还要扫描扩展仓库目录 repository/*.jar
         File repositoryFolder = new File(home, "repository");
-        scanJars(repositoryFolder);
+        try {
+            scanJars(repositoryFolder);
+        } catch (Exception e) {
+            logger.error("Failed to scan {} dir: {}", bootFolder, e.getMessage());
+        }
+        this.running = true;
         logger.info(banner("Scanned jars"));
     }
 
@@ -210,5 +259,10 @@ public class DefaultComponentRepository implements MutableComponentRepository {
     @Override
     public boolean isApplication(String groupId) {
         return DefaultComponent.isApplication(groupId);
+    }
+
+    @Override
+    public String getHome() {
+        return home.getPath();
     }
 }

@@ -33,7 +33,7 @@ public class StaticFeatureResolver extends AbstractFeatureResolver{
         if(component.isPlain()) return;
         ClassRealm realm = resolveContext.getClassRealm(component.getId());
         if(realm == null){
-            PomClassWorld world = (PomClassWorld) resolveContext.getMainClassLoader().getWorld();
+            PomClassWorld world = resolveContext.getWorld();
             try {
                 realm = world.newRealm(component);
             } catch (DuplicateRealmException e) {

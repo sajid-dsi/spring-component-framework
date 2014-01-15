@@ -28,7 +28,7 @@ public class PomClassRealm extends ClassRealm implements Comparable<PomClassReal
         super(world, component.getId(), getParentClassLoader(world, component));
         this.pomWorld = world;
         this.component = component;
-        URL url = this.component.getJarFileURL();
+        URL url = this.component.getFileURL();
         if (url != null) addURL(url);
         //将所有的第三方包的类由一个统一的class loader加载，管理
         //而后这个class loader面向不同的组件，有许多 representation
@@ -122,19 +122,23 @@ public class PomClassRealm extends ClassRealm implements Comparable<PomClassReal
     public Enumeration<URL> getResources(String name) throws IOException {
         // In order to covert the spring namespace handlers
         if("META-INF/spring.handlers".equals(name)){
-            return reverse(super.getResources(name));
+            return arrange(super.getResources(name));
         }else
             return super.getResources(name);
     }
 
-    private Enumeration<URL> reverse(Enumeration<URL> resources) {
-        ArrayList<URL> reverted = new ArrayList<URL>();
+    private Enumeration<URL> arrange(Enumeration<URL> resources) {
+        ArrayList<URL> commons = new ArrayList<URL>();
+        URL special = null;
         while (resources.hasMoreElements()) {
             URL url = resources.nextElement();
-            reverted.add(url);
+            if(url.getPath().indexOf("spring-component-framework") > 0 )
+                special = url;
+            else
+                commons.add(url);
         }
-        Collections.reverse(reverted);
-        return Collections.enumeration(reverted);
+        if(special != null) commons.add(special);
+        return Collections.enumeration(commons);
     }
 
 //    protected void createModuleRealms() {

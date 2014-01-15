@@ -8,6 +8,7 @@ import net.happyonroad.component.core.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
@@ -147,7 +148,12 @@ public class SpringServicePackage implements
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.serviceContext = applicationContext;
-        this.serviceRegistry = applicationContext.getBean(MutableServiceRegistry.class);
+        try {
+            this.serviceRegistry = applicationContext.getBean(MutableServiceRegistry.class);
+        } catch (NoSuchBeanDefinitionException e) {
+            //in shutdown phase, trigger by lazy access
+            return;
+        }
         Component component = applicationContext.getBean(Component.class);
         this.componentName = component.getDisplayName();
         for (SpringServiceImporter importer : importers) {

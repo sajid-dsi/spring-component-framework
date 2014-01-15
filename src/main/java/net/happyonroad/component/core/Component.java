@@ -94,7 +94,7 @@ public interface Component extends Comparable<Component>, Versionize {
      *
      * @return jar的url
      */
-    URL getJarFileURL();
+    URL getFileURL();
 
     /**
      * 用于读取组件内部文件流的资源封装

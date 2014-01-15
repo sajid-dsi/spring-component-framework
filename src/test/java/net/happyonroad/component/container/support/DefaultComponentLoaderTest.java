@@ -75,8 +75,13 @@ public class DefaultComponentLoaderTest {
 
     @After
     public void tearDown() throws Exception {
-        loader.unload(target);
-        repository.stop();
+        try {
+            loader.unload(target);
+        }catch (Exception ex){
+            System.err.println(ex.getMessage());
+        } finally {
+            repository.stop();
+        }
     }
 
     /**

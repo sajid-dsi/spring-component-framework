@@ -32,7 +32,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
 
     private Logger logger = LoggerFactory.getLogger(DefaultLaunchEnvironment.class.getName());
 
-    private ComponentRepository repository;
+    private DefaultComponentRepository repository;
     private ComponentLoader     loader;
 
     public DefaultLaunchEnvironment() {

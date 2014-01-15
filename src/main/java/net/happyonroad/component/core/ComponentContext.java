@@ -5,6 +5,7 @@
 package net.happyonroad.component.core;
 
 import net.happyonroad.component.classworld.PomClassRealm;
+import net.happyonroad.component.classworld.PomClassWorld;
 import net.happyonroad.component.container.ComponentLoader;
 import net.happyonroad.component.container.ComponentRepository;
 import net.happyonroad.component.container.ServiceRegistry;
@@ -40,5 +41,5 @@ public interface ComponentContext {
 
     ComponentRepository getComponentRepository();
 
-    PomClassRealm getMainClassLoader();
+    PomClassWorld getWorld();
 }

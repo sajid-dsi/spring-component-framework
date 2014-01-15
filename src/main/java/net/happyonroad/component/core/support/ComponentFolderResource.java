@@ -35,8 +35,8 @@ public class ComponentFolderResource extends ComponentResource {
         try{
             this.manifest = new Manifest(getInputStream("META-INF/MANIFEST.MF"));
         }catch (IOException ioe){
-            throw new IllegalStateException("The component folder is illegal, " +
-                                                    "there should be a META-INF/MANIFEST.MF to describe the component");
+            // NO manifest, create a default
+            this.manifest = new Manifest();
         }
     }
 

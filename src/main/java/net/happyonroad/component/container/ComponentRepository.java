@@ -36,8 +36,4 @@ public interface ComponentRepository{
      * @return 候选组件列表
      */
     List<Component> resolveComponents(Dependency dependency);
-
-    void start() throws Exception;
-
-    void stop();
 }

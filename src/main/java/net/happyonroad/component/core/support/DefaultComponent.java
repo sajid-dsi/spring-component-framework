@@ -208,25 +208,30 @@ public class DefaultComponent implements Component {
     }
 
     @Override
-    public URL getJarFileURL() {
+    public URL getFileURL() {
         if (file == null) {
             return null;
         }
         try {
             if (isAggregating()) {
                 return null;
-            } else if (file.getName().endsWith(".pom")) {
-                String fileName = file.getName();
-                fileName = fileName.replaceFirst("\\.pom$", ".jar");
-                File jarFile = new File(file.getParentFile().getParent(), fileName);
-                if (jarFile.exists())
-                    return jarFile.toURI().toURL();
-                else
-                    return null;
-            } else if (file.getName().endsWith(".jar")) {
+            } else if (file.isFile()) {
+                if(file.getName().endsWith(".pom")){
+                    String fileName = file.getName();
+                    fileName = fileName.replaceFirst("\\.pom$", ".jar");
+                    File jarFile = new File(file.getParentFile().getParent(), fileName);
+                    if (jarFile.exists())
+                        return jarFile.toURI().toURL();
+                    else
+                        return null;
+                }else if (file.getName().endsWith(".jar")) {
+                    return file.toURI().toURL();
+                } else{
+                    //unknown file type, return file url as default
+                    return file.toURI().toURL();
+                }
+            } else  { //folder
                 return file.toURI().toURL();
-            } else {
-                return null;
             }
         } catch (MalformedURLException e) {
             /*ignore*/
@@ -418,8 +423,8 @@ public class DefaultComponent implements Component {
         }
         List<Component> depends = getDependedComponents();
         for (Component depend : depends) {
-            if(depend.isPlain() && depend.getJarFileURL() != null) {
-                plainUrls.add(depend.getJarFileURL());
+            if(depend.isPlain() && depend.getFileURL() != null) {
+                plainUrls.add(depend.getFileURL());
             }
             plainUrls.addAll(depend.getDependedPlainURLs());
         }
