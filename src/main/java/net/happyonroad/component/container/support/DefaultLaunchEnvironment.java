@@ -40,19 +40,19 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         if (!StringUtils.hasText(home)) {
             home = System.getProperty("user.dir");
             System.setProperty("app.home", home);
-            logger.warn("app.home is not set, use user.dir as app.home: {}", home);
+            logger.debug("app.home is not set, use user.dir as app.home: {}", home);
         }
         String appHost = System.getProperty("app.host");
         if (!StringUtils.hasText(appHost)) {
             appHost = "localhost";
             System.setProperty("app.host", appHost);
-            logger.warn("app.host is not set, use localhost as default");
+            logger.debug("app.host is not set, use localhost as default");
         }
         String appPort = System.getProperty("app.port");
         if (!StringUtils.hasText(appPort)) {
             appPort = "1099";
             System.setProperty("app.port", appPort);
-            logger.warn("app.port is not set, use 1099 as default");
+            logger.debug("app.port is not set, use 1099 as default");
         }
         repository = createComponentRepository(home);
         try {

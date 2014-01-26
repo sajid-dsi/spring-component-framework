@@ -17,9 +17,12 @@ import java.util.*;
  * 扩展 plexus 的缺省 class realm的对象
  */
 public class PomClassRealm extends ClassRealm implements Comparable<PomClassRealm>{
+    private static Map<String, Class> shortcuts = new HashMap<String, Class>();
+
     private PomClassWorld         pomWorld;
     private Component             component;
     private SortedSet<ClassRealm> dependedRealms;
+
     /*暂时不支持 depends parent == depends parent's all modules*/
     /*如果需要这个特性，那么也应该在组件之间建立depends关系的时候直接翻译为对parent的modules的依赖*/
     //private SortedSet<ClassRealm> moduleRealms;
@@ -43,6 +46,17 @@ public class PomClassRealm extends ClassRealm implements Comparable<PomClassReal
     // ------------------------------------------------------------
     //     扩展功能，从dependencies里面加载类，资源
     // ------------------------------------------------------------
+
+    @Override
+    public Class loadClassFromSelf(String name) {
+        try {
+            Class klass = shortcuts.get(name);
+            if(klass != null) return klass;
+            else return super.findSystemClass(name);
+        } catch (ClassNotFoundException e) {
+            return super.loadClassFromSelf(name);
+        }
+    }
 
     public Class loadClassFromDepends(String name) {
         for (ClassRealm dependedRealm : dependedRealms) {
@@ -171,5 +185,16 @@ public class PomClassRealm extends ClassRealm implements Comparable<PomClassReal
             throw new IllegalStateException("I'v checked the realm/component duplication, but it occurs." +
                                                     " this error occurred by concurrent issue!");
         }
+    }
+
+    static {
+        shortcuts.put("int", int.class);
+        shortcuts.put("long", long.class);
+        shortcuts.put("short", short.class);
+        shortcuts.put("byte", byte.class);
+        shortcuts.put("double", double.class);
+        shortcuts.put("float", float.class);
+        shortcuts.put("boolean", boolean.class);
+        shortcuts.put("char", char.class);
     }
 }
