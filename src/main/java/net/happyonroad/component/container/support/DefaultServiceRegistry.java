@@ -26,7 +26,8 @@ public class DefaultServiceRegistry implements MutableServiceRegistry {
 
     @Override
     public <T> void register(Class<T> interfaceClass, T service, String hint) {
-        logger.info("Register {} with hint = {}", interfaceClass.getName(), hint);
+        String serviceName = service.getClass().getSimpleName();
+        logger.info("Register {} by {} with hint {}", interfaceClass.getName(), serviceName, hint);
         Map<String, Object> instances = services.get(interfaceClass);
         if (instances == null) {
             instances = new HashMap<String, Object>(2);

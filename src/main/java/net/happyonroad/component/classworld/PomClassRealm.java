@@ -7,8 +7,16 @@ import net.happyonroad.component.core.Component;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.codehaus.plexus.classworlds.realm.DuplicateRealmException;
 import org.codehaus.plexus.classworlds.strategy.Strategy;
+import org.springframework.jmx.export.annotation.ManagedAttribute;
+import org.springframework.jmx.export.annotation.ManagedOperation;
+import org.springframework.jmx.export.annotation.ManagedResource;
+import org.springframework.jmx.export.naming.SelfNaming;
 
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.*;
@@ -16,12 +24,15 @@ import java.util.*;
 /**
  * 扩展 plexus 的缺省 class realm的对象
  */
-public class PomClassRealm extends ClassRealm implements Comparable<PomClassRealm>{
+@ManagedResource(description = "组件资源加载器" )
+public class PomClassRealm extends ClassRealm
+        implements Comparable<PomClassRealm>, SelfNaming {
     private static Map<String, Class> shortcuts = new HashMap<String, Class>();
 
-    private PomClassWorld         pomWorld;
+    PomClassWorld         pomWorld;
     private Component             component;
     private SortedSet<ClassRealm> dependedRealms;
+    Map<String, LoadUnit> stats = new HashMap<String, LoadUnit>();
 
     /*暂时不支持 depends parent == depends parent's all modules*/
     /*如果需要这个特性，那么也应该在组件之间建立depends关系的时候直接翻译为对parent的modules的依赖*/
@@ -44,7 +55,7 @@ public class PomClassRealm extends ClassRealm implements Comparable<PomClassReal
     }
 
     // ------------------------------------------------------------
-    //     扩展功能，从dependencies里面加载类，资源
+    //     扩展功能，统计类加载情况
     // ------------------------------------------------------------
 
     @Override
@@ -52,21 +63,36 @@ public class PomClassRealm extends ClassRealm implements Comparable<PomClassReal
         try {
             Class klass = shortcuts.get(name);
             if(klass != null) return klass;
-            else return super.findSystemClass(name);
+            else {
+                klass = super.findSystemClass(name);
+                loaded(name, "self#system");
+                return klass;
+            }
         } catch (ClassNotFoundException e) {
-            return super.loadClassFromSelf(name);
+            Class klass = super.loadClassFromSelf(name);
+            if(klass != null) loaded(name, "self#url");
+            return klass;
         }
     }
 
     public Class loadClassFromDepends(String name) {
         for (ClassRealm dependedRealm : dependedRealms) {
             try {
-                return dependedRealm.loadClass(name);
+                Class klass = dependedRealm.loadClass(name);
+                loaded(name, "depends#" + dependedRealm.getId());
+                return klass;
             } catch (ClassNotFoundException e) {
                 /*continue; to try next realm*/
             }
         }
         return null;
+    }
+
+    @Override
+    public Class loadClassFromParent(String name) {
+        Class klass = super.loadClassFromParent(name);
+        if(klass != null) loaded(name, "parent");
+        return klass;
     }
 
     public URL loadResourceFromDepends(String name) {
@@ -128,7 +154,7 @@ public class PomClassRealm extends ClassRealm implements Comparable<PomClassReal
     }
 
     @Override
-    public int compareTo(PomClassRealm another) {
+    public int compareTo(@SuppressWarnings("NullableProblems") PomClassRealm another) {
         return this.component.compareTo(another.component);
     }
 
@@ -154,6 +180,28 @@ public class PomClassRealm extends ClassRealm implements Comparable<PomClassReal
         if(special != null) commons.add(special);
         return Collections.enumeration(commons);
     }
+
+    // ------------------------------------------------------------
+    //     可管理特性
+    // ------------------------------------------------------------
+
+    @ManagedAttribute
+    @Override
+    public String getId() {
+        return super.getId();
+    }
+
+    @ManagedAttribute
+    public String getURL(){
+        URL[] urls = getURLs();
+        return urls == null || urls.length == 0 ? "" : urls[0].getPath();
+    }
+
+    @Override
+    public URL[] getURLs() {
+        return super.getURLs();
+    }
+
 
 //    protected void createModuleRealms() {
 //        moduleRealms = new TreeSet<ClassRealm>();
@@ -196,5 +244,49 @@ public class PomClassRealm extends ClassRealm implements Comparable<PomClassReal
         shortcuts.put("float", float.class);
         shortcuts.put("boolean", boolean.class);
         shortcuts.put("char", char.class);
+        shortcuts.put("void", void.class);
     }
+
+    @Override
+    public ObjectName getObjectName() throws MalformedObjectNameException {
+        return new ObjectName("dnt.realm:name=" + getId());
+    }
+
+
+    void loading(String className) {
+        LoadUnit unit = stats.get(className);
+        if (unit == null) {
+            unit = new LoadUnit();
+            stats.put(className, unit);
+        }
+        unit.loading();
+    }
+
+    void loaded( String className, String hit) {
+        LoadUnit unit = stats.get(className);
+        unit.loaded(hit);
+    }
+
+    @ManagedOperation
+    public void dump(String fileName) throws FileNotFoundException {
+        PrintStream stream = new PrintStream(fileName);
+        try {
+            stream.append(getId()).append("\n");
+            dump(stream);
+            stream.append("\n");
+        } finally {
+            stream.close();
+        }
+    }
+
+    void dump(PrintStream stream){
+        for (Map.Entry<String, LoadUnit> subEntry : stats.entrySet()) {
+            //class name
+            stream.append("  ").append(subEntry.getKey()).append("\n");
+            //stats info
+            subEntry.getValue().dump(stream);
+        }
+        stream.flush();
+    }
+
 }

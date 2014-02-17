@@ -74,9 +74,10 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
         } catch (Exception e) {
             throw new ResourceNotFoundException("Can't load context from application stream", e);
         }
+        registerApplicationHelpers(component, context, realm);
         if (parent == null) {
             //如果不存在父上下文，就把这些对服务组件的辅助对象，直接注册在这个上下文中
-            registerServiceHelpers(component, context, realm);
+            registerServiceHelpers(context);
         }
         context.refresh();
         return context;

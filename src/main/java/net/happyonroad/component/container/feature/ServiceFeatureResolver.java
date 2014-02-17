@@ -75,7 +75,8 @@ public class ServiceFeatureResolver extends SpringFeatureResolver {
         ServiceApplicationContext context = new ServiceApplicationContext(component, realm, parent);
         InputStreamResource resource = new ComponentInputStreamResource(component, serviceStream, "META-INF/service.xml");
         context.load(resource);
-        registerServiceHelpers(component, context, realm);
+        registerApplicationHelpers(component, context, realm);
+        registerServiceHelpers(context);
         context.refresh();
         return context;
     }

@@ -210,7 +210,7 @@ public class AppLauncher extends Launcher implements Executable {
                 Thread.sleep(1000);
             } catch (Exception e) {
                 //We will catch exception while started by wrapper process
-                Thread.yield();
+                //Thread.yield();
                 try {
                     //if we only yield without sleep,
                     // the CPU usage will be raised to 100%, but other application can works

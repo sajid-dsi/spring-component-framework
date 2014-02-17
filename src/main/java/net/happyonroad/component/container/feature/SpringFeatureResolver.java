@@ -47,7 +47,7 @@ public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
         }
     }
 
-    protected void registerServiceHelpers(Component component,
+    protected void registerApplicationHelpers(Component component,
                                           GenericXmlApplicationContext context,
                                           ClassRealm realm) {
         ConfigurableBeanFactory cbf = (ConfigurableBeanFactory) context.getAutowireCapableBeanFactory();
@@ -55,6 +55,12 @@ public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
         cbf.registerSingleton("component", component);
         //将组件的资源加载器也注册到其中
         cbf.registerSingleton("realm", realm);
+        //将world也注册进去
+        cbf.registerSingleton("world", resolveContext.getWorld());
+    }
+
+    protected void registerServiceHelpers(GenericXmlApplicationContext context) {
+        ConfigurableBeanFactory cbf = (ConfigurableBeanFactory) context.getAutowireCapableBeanFactory();
         //将全局的注册表也注册进去
         cbf.registerSingleton("serviceRegistry", resolveContext.getRegistry());
         //将Component Loader也注册进去

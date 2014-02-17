@@ -45,6 +45,6 @@ public class LogUtils {
      * @return 可以输出的日志
      */
     public static String banner(String format, Object... args) {
-        return banner(format, 10, 120, args);
+        return banner(format, 8, 100, args);
     }
 }

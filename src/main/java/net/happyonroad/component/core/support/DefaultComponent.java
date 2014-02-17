@@ -10,7 +10,12 @@ import net.happyonroad.component.core.exception.InvalidComponentException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jmx.export.annotation.ManagedAttribute;
+import org.springframework.jmx.export.annotation.ManagedResource;
+import org.springframework.jmx.export.naming.SelfNaming;
 
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
@@ -27,7 +32,8 @@ import java.util.regex.Pattern;
  * 这个类其实是对Maven Artifact的一种简化
  */
 @SuppressWarnings("unused")
-public class DefaultComponent implements Component {
+@ManagedResource(description = "Spring Component")
+public class DefaultComponent implements Component, SelfNaming {
     private static       Logger   logger          = LoggerFactory.getLogger(DefaultComponent.class.getName());
     private static final Pattern  INTERPOLATE_PTN = Pattern.compile("\\$\\{([^}]+)\\}");
     private static final String[] ATTRIBUTE_NAMES = new String[]{"groupId", "artifactId", "version", "type",
@@ -121,21 +127,25 @@ public class DefaultComponent implements Component {
         return (value == null) || (value.trim().length() < 1);
     }
 
+    @ManagedAttribute
     @Override
     public String getGroupId() {
         return groupId;
     }
 
+    @ManagedAttribute
     @Override
     public String getArtifactId() {
         return artifactId;
     }
 
+    @ManagedAttribute
     @Override
     public String getVersion() {
         return version;
     }
 
+    @ManagedAttribute
     @Override
     public String getClassifier() {
         return classifier;
@@ -145,24 +155,29 @@ public class DefaultComponent implements Component {
         return classifier != null && !"".equalsIgnoreCase(classifier.trim());
     }
 
+    @ManagedAttribute
     @Override
     public String getType() {
         return type;
     }
 
+    @ManagedAttribute
     public String getName() {
         return name;
     }
 
+    @ManagedAttribute
     @Override
     public String getDisplayName() {
         return name == null ? getId() : name;
     }
 
+    @ManagedAttribute
     public String getDescription() {
         return description;
     }
 
+    @ManagedAttribute
     public String getUrl() {
         return url;
     }
@@ -202,11 +217,13 @@ public class DefaultComponent implements Component {
         this.resource = resource;
     }
 
+    @ManagedAttribute
     @Override
     public File getFile() {
         return file;
     }
 
+    @ManagedAttribute
     @Override
     public URL getFileURL() {
         if (file == null) {
@@ -246,13 +263,18 @@ public class DefaultComponent implements Component {
     //
     // ----------------------------------------------------------------------
 
+    @ManagedAttribute
     @Override
     public String getId() {
         return getDependencyConflictId();
     }
 
+    @Override
+    public ObjectName getObjectName() throws MalformedObjectNameException {
+        return new ObjectName("dnt.component:name=" + getId());
+    }
 
-    // ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
     // Object overrides
     // ----------------------------------------------------------------------
 
@@ -415,6 +437,7 @@ public class DefaultComponent implements Component {
         return all;
     }
 
+    @ManagedAttribute
     @Override
     public Set<URL> getDependedPlainURLs() {
         Set<URL> plainUrls = new HashSet<URL>();
@@ -436,6 +459,7 @@ public class DefaultComponent implements Component {
         this.dependedComponents = dependedComponents;
     }
 
+    @ManagedAttribute
     public List<String> getModuleNames() {
         return moduleNames;
     }
@@ -464,6 +488,7 @@ public class DefaultComponent implements Component {
         this.artifactId = artifactId;
     }
 
+    @ManagedAttribute
     @Override
     public boolean isSnapshot() {
         return SNAPSHOT_VERSION.equalsIgnoreCase(getClassifier());
@@ -478,16 +503,19 @@ public class DefaultComponent implements Component {
         this.release = release;
     }
 
+    @ManagedAttribute
     @Override
     public boolean isRelease() {
         return release;
     }
 
+    @ManagedAttribute
     @Override
     public boolean isAggregating() {
         return "pom".equals(getType());
     }
 
+    @ManagedAttribute
     public Properties getProperties() {
         return properties;
     }
@@ -534,6 +562,7 @@ public class DefaultComponent implements Component {
         }
     }
 
+    @ManagedAttribute
     @Override
     public boolean isPlain() {
         return getResource() == null || !getResource().exists("META-INF/pom.xml");

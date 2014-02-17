@@ -10,7 +10,11 @@ import org.codehaus.plexus.classworlds.realm.DuplicateRealmException;
 import org.codehaus.plexus.classworlds.realm.NoSuchRealmException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jmx.export.annotation.ManagedOperation;
+import org.springframework.jmx.export.annotation.ManagedResource;
 
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
@@ -18,11 +22,20 @@ import java.util.Map;
 /**
  * 根据Pom创建一个Classworld，其中的Realm为其他依赖的Jar的Pom
  */
-public class PomClassWorld extends ClassWorld{
+@ManagedResource(objectName= "dnt.component:name=world", description = "Pom类体系")
+public class PomClassWorld extends ClassWorld {
     private Logger logger = LoggerFactory.getLogger(PomClassWorld.class.getName());
     Map<String, PomClassRealm> stolenRealms;
-    List<ClassWorldListener> stolenListeners;
-    String mainComponentId;
+    List<ClassWorldListener>   stolenListeners;
+    String                     mainComponentId;
+
+    // -- 统计信息 --
+    // realm
+    //   |- class A:
+    //       |- loading: xx times
+    //       |- loaded#self#system: xx times
+    //       |- loaded#self#url:    xx times
+    //       |- loaded#depended#id: xx times
 
     public PomClassWorld() {
         try {
@@ -34,20 +47,20 @@ public class PomClassWorld extends ClassWorld{
             listenersField.setAccessible(true);
             //noinspection unchecked
             stolenListeners = (List<ClassWorldListener>) listenersField.get(this);
-        }catch (Exception ex){
-            throw new UnsupportedOperationException("The parent ClassWorld do not support PomClassWorld hacking by refection", ex);
+        } catch (Exception ex) {
+            throw new UnsupportedOperationException(
+                    "The parent ClassWorld do not support PomClassWorld hacking by refection", ex);
         }
     }
 
     public PomClassRealm newRealm(Component component) throws DuplicateRealmException {
         String id = component.getId();
-        if ( getClassRealm( id ) != null)
-        {
-            throw new DuplicateRealmException( this, id );
+        if (getClassRealm(id) != null) {
+            throw new DuplicateRealmException(this, id);
         }
 
         logger.debug("Creating realm for {}", component);
-        PomClassRealm realm = new PomClassRealm( this, component );
+        PomClassRealm realm = new PomClassRealm(this, component);
         stolenRealms.put(id, realm);
 
         realm.afterConstruction();
@@ -68,6 +81,7 @@ public class PomClassWorld extends ClassWorld{
         return (PomClassRealm) super.getClassRealm(component.getId());
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public PomClassRealm getRealm(Component component) throws NoSuchRealmException {
         return (PomClassRealm) getRealm(component.getId());
     }
@@ -76,7 +90,27 @@ public class PomClassWorld extends ClassWorld{
         this.mainComponentId = mainComponentId;
     }
 
-    public PomClassRealm getMainRealm(){
+    public PomClassRealm getMainRealm() {
         return getClassRealm(this.mainComponentId);
+    }
+
+    ////////////////////////////////////////////////////////////
+    // 统计相关的服务
+    ////////////////////////////////////////////////////////////
+
+
+    @ManagedOperation
+    public void dump(String fileName) throws FileNotFoundException {
+        PrintStream stream = new PrintStream(fileName);
+        try {
+            for (Map.Entry<String, PomClassRealm> entry : stolenRealms.entrySet()) {
+                stream.append(entry.getKey()).append("\n");
+                entry.getValue().dump(stream);
+                stream.append("\n");
+            }
+        } finally {
+            stream.close();
+        }
+
     }
 }
