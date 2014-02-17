@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * 根据Pom创建一个Classworld，其中的Realm为其他依赖的Jar的Pom
  */
-@ManagedResource(objectName= "dnt.component:name=world", description = "Pom类体系")
+@ManagedResource(objectName= "spring.components:name=world", description = "Pom类体系")
 public class PomClassWorld extends ClassWorld {
     private Logger logger = LoggerFactory.getLogger(PomClassWorld.class.getName());
     Map<String, PomClassRealm> stolenRealms;

@@ -271,7 +271,7 @@ public class DefaultComponent implements Component, SelfNaming {
 
     @Override
     public ObjectName getObjectName() throws MalformedObjectNameException {
-        return new ObjectName("dnt.component:name=" + getId());
+        return new ObjectName("spring.components:name=" + getId());
     }
 
 // ----------------------------------------------------------------------

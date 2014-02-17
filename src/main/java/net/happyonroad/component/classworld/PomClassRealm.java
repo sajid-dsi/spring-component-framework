@@ -249,7 +249,7 @@ public class PomClassRealm extends ClassRealm
 
     @Override
     public ObjectName getObjectName() throws MalformedObjectNameException {
-        return new ObjectName("dnt.realm:name=" + getId());
+        return new ObjectName("spring.realms:name=" + getId());
     }
 
 
