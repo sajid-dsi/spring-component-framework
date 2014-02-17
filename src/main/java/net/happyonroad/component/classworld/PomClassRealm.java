@@ -279,6 +279,11 @@ public class PomClassRealm extends ClassRealm
         }
     }
 
+    @ManagedOperation
+    public void reset(){
+        stats.clear();
+    }
+
     void dump(PrintStream stream){
         for (Map.Entry<String, LoadUnit> subEntry : stats.entrySet()) {
             //class name

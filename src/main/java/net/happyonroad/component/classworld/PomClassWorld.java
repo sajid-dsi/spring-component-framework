@@ -113,4 +113,11 @@ public class PomClassWorld extends ClassWorld {
         }
 
     }
+
+    @ManagedOperation
+    public void reset(){
+        for (PomClassRealm realm : stolenRealms.values()) {
+            realm.reset();
+        }
+    }
 }
