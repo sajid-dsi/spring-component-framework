@@ -5,7 +5,6 @@
         <groupId>net.happyonroad</groupId>
         <artifactId>spring-component-parent</artifactId>
         <version>0.0.3-SNAPSHOT</version>
-        <relativePath>../spring-component-parent</relativePath>
     </parent>
 
     <artifactId>spring-component-framework</artifactId>
