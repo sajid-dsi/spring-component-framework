@@ -8,7 +8,7 @@
     </parent>
 
     <artifactId>spring-component-framework</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.4-SNAPSHOT</version>
 
     <name>Spring Component Framework</name>
     <url>http://github.com/Kadvin/spring-component-framework</url>
@@ -23,7 +23,7 @@
         <url>https://github.com/Kadvin/spring-component-framework</url>
         <connection>scm:git:git@github.com:Kadvin/spring-component-framework.git</connection>
         <developerConnection>scm:git:git@github.com:Kadvin/spring-component-framework.git</developerConnection>
-        <tag>spring-component-framework-0.0.3</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <dependencies>
