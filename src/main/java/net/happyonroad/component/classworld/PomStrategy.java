@@ -22,7 +22,15 @@ public class PomStrategy extends AbstractStrategy {
 
     @Override
     public Class loadClass(String name) throws ClassNotFoundException {
-        pomRealm.loading(name);
+        LoadUnit unit = pomRealm.loading(name);
+        if(unit.isMissed()) {
+            unit.missing();
+            throw new ClassNotFoundException( name );
+        }
+        return realLoadClass(name);
+    }
+
+    public Class realLoadClass(String name) throws ClassNotFoundException {
         //pom realm refer to component itself
         Class clazz = pomRealm.loadClassFromSelf(name);
 
@@ -38,6 +46,7 @@ public class PomStrategy extends AbstractStrategy {
 
                 if ( clazz == null )
                 {
+                    pomRealm.missing(name);
                     throw new ClassNotFoundException( name );
                 }
             }

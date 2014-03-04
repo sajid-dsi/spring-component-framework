@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 
 /**
  * 版本依赖
+ * TODO 支持版本表达式，如 [0.1.0,2.1.0)
  */
 public class Dependency implements Versionize{
 

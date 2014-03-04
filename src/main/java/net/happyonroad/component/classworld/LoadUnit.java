@@ -9,9 +9,10 @@ import java.io.PrintStream;
  * 加载某个类的计量单元
  */
 public class LoadUnit {
-    private       int    loading;
-    private       String result;
-    private       int    loaded;
+    private int    loading;
+    private String result;
+    private int    loaded;
+    private int    missed;
 
 
     public void loading() {
@@ -35,8 +36,16 @@ public class LoadUnit {
               .append(" times\n");
         }else{
             sw.append("    Missing ")
-              .append(String.valueOf(loading))
+              .append(String.valueOf(missed))
               .append(" times\n");
         }
+    }
+
+    public void missing() {
+        missed ++;
+    }
+
+    public boolean isMissed() {
+        return missed > 0 ;
     }
 }

@@ -252,19 +252,28 @@ public class PomClassRealm extends ClassRealm
         return new ObjectName("spring.realms:name=" + getId());
     }
 
+    // ------------------------------------------------------------
+    //     统计支持
+    // ------------------------------------------------------------
 
-    void loading(String className) {
+    LoadUnit loading(String className) {
         LoadUnit unit = stats.get(className);
         if (unit == null) {
             unit = new LoadUnit();
             stats.put(className, unit);
         }
         unit.loading();
+        return unit;
     }
 
-    void loaded( String className, String hit) {
+    void loaded(String className, String hit) {
         LoadUnit unit = stats.get(className);
         unit.loaded(hit);
+    }
+
+    void missing(String className){
+        LoadUnit unit = stats.get(className);
+        unit.missing();
     }
 
     @ManagedOperation

@@ -10,6 +10,7 @@ import org.codehaus.plexus.classworlds.realm.DuplicateRealmException;
 import org.codehaus.plexus.classworlds.realm.NoSuchRealmException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 
@@ -119,5 +120,20 @@ public class PomClassWorld extends ClassWorld {
         for (PomClassRealm realm : stolenRealms.values()) {
             realm.reset();
         }
+    }
+
+    @ManagedAttribute
+    public int getRealmCount(){
+        return stolenRealms.size();
+    }
+
+    @ManagedAttribute
+    public int getListenerCount(){
+        return stolenListeners.size();
+    }
+
+    @ManagedAttribute
+    public String getMainComponentId(){
+        return mainComponentId;
     }
 }
