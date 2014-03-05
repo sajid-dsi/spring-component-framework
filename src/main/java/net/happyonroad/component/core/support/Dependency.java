@@ -4,8 +4,10 @@
 package net.happyonroad.component.core.support;
 
 import net.happyonroad.component.core.Component;
+import net.happyonroad.component.core.ComponentVersion;
 import net.happyonroad.component.core.Versionize;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
+import net.happyonroad.component.core.exception.InvalidVersionSpecificationException;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -13,19 +15,22 @@ import java.util.regex.Pattern;
 
 /**
  * 版本依赖
- * TODO 支持版本表达式，如 [0.1.0,2.1.0)
  */
 public class Dependency implements Versionize{
 
-    private static Pattern digitPattern = Pattern.compile("(^\\d+)(.+)?");
-    private static Pattern typePattern = Pattern.compile("\\.(jar|rar|war|ear|pom)$");
-    private static Pattern versionPattern = Pattern.compile("^\\d+(\\.\\d+\\w*)*");
+    private static Pattern digitPattern        = Pattern.compile("(^\\d+)(.+)?");
+    private static Pattern typePattern         = Pattern.compile("\\.(jar|rar|war|ear|pom)$");
+    private static Pattern versionPattern      = Pattern.compile("^\\d+(\\.\\d+\\w*)*");
+    private static Pattern rangeFeaturePattern = Pattern.compile("[,||\\(|\\)|\\[\\]]+");
+
 
     private String groupId;
 
     private String artifactId;
 
-    private String version;//核心版本，如: 1.0.0
+    /*package*/ String version;//核心版本，如: 1.0.0, for test
+
+    private VersionRange range;//版本范围，如 [1.0.0,)
 
     private String type;//pom or jar, war, rar, and so on
 
@@ -33,8 +38,7 @@ public class Dependency implements Versionize{
 
     private String scope;//See Component.SCOPE_XXX
 
-    private Boolean optional;
-
+    private Boolean         optional;
     private List<Exclusion> exclusions;
 
     public Dependency() {
@@ -47,9 +51,9 @@ public class Dependency implements Versionize{
     public Dependency(String groupId, String artifactId, String version) {
         this.groupId = groupId;
         this.artifactId = artifactId;
-        if(artifactId.indexOf(".") > 0 ){
+        if (artifactId.indexOf(".") > 0) {
             int position = artifactId.lastIndexOf('.');
-            this.artifactId = artifactId.substring(position+1);
+            this.artifactId = artifactId.substring(position + 1);
             this.groupId = groupId + "." + artifactId.substring(0, position);
         }
         setVersion(version);
@@ -100,9 +104,26 @@ public class Dependency implements Versionize{
 
     public void setVersion(String version) {
         if(version != null ){
-            String[] versionAndClassifier = splitClassifierFromVersion(version, new StringBuilder());
-            this.version = versionAndClassifier[0];
-            this.setClassifier(versionAndClassifier[1]);
+            if(rangeFeaturePattern.matcher(version).find()){
+                VersionRange range;
+                try {
+                    range = VersionRange.createFromVersionSpec(version);
+                } catch (InvalidVersionSpecificationException e) {
+                    throw new RuntimeException("Can't parse version range: " + version, e);
+                }
+                if( range.hasRestrictions() ){
+                    this.version = null;
+                    this.range = range;
+                }else{
+                    this.version = range.getRecommendedVersion().toString();
+                }
+            }else{
+                String[] versionAndClassifier = splitClassifierFromVersion(version, new StringBuilder());
+                this.version = versionAndClassifier[0];
+                this.setClassifier(versionAndClassifier[1]);
+            }
+        }else{
+            this.version = null;
         }
     }
 
@@ -149,7 +170,10 @@ public class Dependency implements Versionize{
     public String toString() {
         String gs = groupId == null ? "<undefined>" : groupId;
         String as = artifactId == null ? "<undefined>" : artifactId;
-        String vs = version != null && version.length() > 0 ? "-" + version : "-<*>";
+        String vs = version != null && version.length() > 0 ? "-" + version : null;
+        if(vs == null && range != null ){
+            vs = "-" + range.toString();
+        }
         String cs = classifier != null && classifier.length() > 0 ? "-" + classifier : "";
         String ts = type != null && type.length() > 0 ? "." + type : "";
         return String.format("%s.%s%s%s%s", gs, as, vs, cs, ts);
@@ -302,6 +326,10 @@ public class Dependency implements Versionize{
             accept = getVersion().equals(componentOrDependency.getVersion());
             if (!accept) return false;
         }
+        if( range != null ){
+            accept = range.containsVersion(new ComponentVersion(componentOrDependency.getVersion()));
+            if (!accept) return false;
+        }
         if( getClassifier() != null ){
             accept = getClassifier().equals(componentOrDependency.getClassifier());
             if (!accept) return false;
@@ -396,12 +424,16 @@ public class Dependency implements Versionize{
         if(scope != null ) this.scope = component.interpolate(scope);
     }
 
+    /**
+     * 从XML中直接解析出来的依赖信息，其groupId和artifactId可能有问题，其version可能是range形态，都需要重新调整
+     */
     public void reform() {
-        if(artifactId.indexOf(".") > 0 ){
+        if(artifactId.contains(".")){
             String badArtifactId = this.artifactId;
             int position = badArtifactId.lastIndexOf('.');
             this.artifactId = badArtifactId.substring(position+1);
             this.groupId = groupId + "." + badArtifactId.substring(0, position);
         }
+        setVersion(this.version);
     }
 }

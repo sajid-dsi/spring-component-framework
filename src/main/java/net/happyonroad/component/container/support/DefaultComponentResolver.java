@@ -10,6 +10,7 @@ import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
+import net.happyonroad.component.core.exception.InvalidVersionSpecificationException;
 import net.happyonroad.component.core.support.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -192,37 +193,37 @@ public class DefaultComponentResolver implements ComponentResolver {
 
     protected void processDependencies(Dependency dependency, DefaultComponent component)
             throws InvalidComponentNameException, DependencyNotMeetException {
+        if (component.getDependencies().isEmpty()) return;
+
         //验证依赖信息
-        if (!component.getDependencies().isEmpty()) {
-            List<Dependency> dependencies = component.getDependencies();
-            List<Component> dependedComponents = new ArrayList<Component>(dependencies.size());
-            for (Dependency depended : dependencies) {
-                depended.reform();//move the artifactId prefix with dot into group Id
-                if (dependency.exclude(depended)) {
-                    logger.trace("Skip excluded {}", depended);
-                    continue;
-                }
-                if (!depended.isTest()) {//只要不是Test的，就都尝试解析
-                    try {
-                        Component dependedComponent = repository.resolveComponent(depended);
-                        dependedComponents.add(dependedComponent);
-                    } catch (DependencyNotMeetException e) {
-                        //但只有必选的，以及是compile time的找不到才抛出异常
-                        if (!depended.isOptional() && depended.isCompile()) {
-                            throw new DependencyNotMeetException(component,
-                                                                 "Can't resolve " + component +
-                                                                 ", because of dependency " +
-                                                                 e.getDependency() + " can't be satisfied", e);
-                        } else{
-                            logger.trace("Can't resolve {} dependency {}", depended.getScope(), depended);
-                        }
-                    }
-                } else {
-                    logger.trace("Skip {} dependency {}", depended.getScope(), depended);
-                }
+        List<Dependency> dependencies = component.getDependencies();
+        List<Component> dependedComponents = new ArrayList<Component>(dependencies.size());
+        for (Dependency depended : dependencies) {
+            depended.reform();//move the artifactId prefix with dot into group Id
+            if (dependency.exclude(depended)) {
+                logger.trace("Skip excluded {}", depended);
+                continue;
             }
-            component.setDependedComponents(dependedComponents);
+            if (!depended.isTest()) {//只要不是Test的，就都尝试解析
+                try {
+                    Component dependedComponent = repository.resolveComponent(depended);
+                    dependedComponents.add(dependedComponent);
+                } catch (DependencyNotMeetException e) {
+                    //但只有必选的，以及是compile time的找不到才抛出异常
+                    if (!depended.isOptional() && depended.isCompile()) {
+                        throw new DependencyNotMeetException(component,
+                                                             "Can't resolve " + component +
+                                                             ", because of dependency " +
+                                                             e.getDependency() + " can't be satisfied", e);
+                    } else{
+                        logger.trace("Can't resolve {} dependency {}", depended.getScope(), depended);
+                    }
+                }
+            } else {
+                logger.trace("Skip {} dependency {}", depended.getScope(), depended);
+            }
         }
+        component.setDependedComponents(dependedComponents);
     }
 
     @SuppressWarnings("unused")

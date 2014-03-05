@@ -186,14 +186,6 @@ public interface Component extends Comparable<Component>, Versionize {
     boolean isAggregating();
 
     /**
-     * 判断这个组件是不是满足传入的依赖条件？
-     *
-     * @param dependency 需要满足的条件
-     * @return 是否满足
-     */
-    boolean meet(Dependency dependency);
-
-    /**
      * 获取jar文件的Manifest属性
      *
      * @param attributeName 属性名称

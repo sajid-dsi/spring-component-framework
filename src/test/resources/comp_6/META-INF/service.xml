@@ -5,7 +5,7 @@
        http://www.happyonroad.net/schema/service.xsd">
 
     <export>
-        <role>spring.test.scan.Provider</role>
+        <role>spring.test.scan_p.Provider</role>
     </export>
 
 </service>

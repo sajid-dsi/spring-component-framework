@@ -3,6 +3,7 @@
  */
 package net.happyonroad.component.core.support;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 /**
@@ -203,4 +204,41 @@ public class DependencyTest extends TestCase {
         assertEquals("servlet-api", dependency.getArtifactId());
         assertEquals("3.1.0", dependency.getVersion());
     }
+
+
+    /**
+     * 测试目的：
+     *   可以支持range形态的version
+     * 验证方式：
+     *   符合range的版本能够通过，不符合的不通过
+     * @throws Exception
+     */
+    public void testDependRange() throws Exception{
+        Dependency dependency = new Dependency();
+        dependency.setGroupId("net.happyonroad");
+        dependency.setArtifactId("probe-api");
+        dependency.setVersion("[1.0.1,)");
+        dependency.reform();
+        Assert.assertFalse(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.0")));
+        Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.1")));
+        Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.1-SNAPSHOT")));
+        Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.2")));
+    }
+
+    public void testDependSnapshotRange() throws Exception{
+        Dependency dependency = new Dependency();
+        dependency.setGroupId("net.happyonroad");
+        dependency.setArtifactId("probe-api");
+        dependency.setVersion("[1.0.1-SNAPSHOT,)");
+        dependency.reform();
+        Assert.assertFalse(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.0")));
+        Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.1")));
+        Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.1-SNAPSHOT")));
+        Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.2")));
+        Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.2-SNAPSHOT")));
+
+    }
+
 }
+
+

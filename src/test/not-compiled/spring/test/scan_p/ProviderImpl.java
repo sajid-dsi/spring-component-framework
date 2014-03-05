@@ -1,7 +1,7 @@
 /**
  * @author XiongJie, Date: 13-12-27
  */
-package spring.test.scan;
+package spring.test.scan_p;
 
 import org.springframework.stereotype.Component;
 

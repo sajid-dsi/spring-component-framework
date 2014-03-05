@@ -36,14 +36,15 @@ public class DefaultComponentLoaderTest {
         tempFolder = TempFile.tempFolder();
 
         createPom("comp_0", "spring.test-0.0.1", tempFolder);
-        if("create".equals(System.getProperty("spring.test.action", "copy") )){
+        if("create".equals(System.getenv("spring.test.action") )){
             createJar("comp_1", "spring.test.comp_1-0.0.1", "spring/test/api", tempFolder);
             createJar("comp_2", "spring.test.comp_2-0.0.1", "spring/test/standalone", tempFolder);
             createJar("comp_3", "spring.test.comp_3-0.0.1", "spring/test/provider", tempFolder);
             createJar("comp_4", "spring.test.comp_4-0.0.1", "spring/test/user", tempFolder);
             createJar("comp_5", "spring.test.comp_5-0.0.1", "spring/test/mixed", tempFolder);
-            createJar("comp_6", "spring.test.comp_6-0.0.1", "spring/test/scan", tempFolder, new Filter("Provider"));
-            createJar("comp_7", "spring.test.comp_7-0.0.1", "spring/test/scan", tempFolder, new Filter("User"));
+            createJar("comp_6", "spring.test.comp_6-0.0.1", "spring/test/scan_p", tempFolder, new Filter("Provider"));
+            createJar("comp_7", "spring.test.comp_7-0.0.1", "spring/test/scan_u", tempFolder, new Filter("User"));
+            createJar("comp_8", "spring.test.comp_8-0.0.1", "spring/test/scan_u", tempFolder, new Filter("User"));
         }else{
             copyJar("spring.test.comp_1-0.0.1", tempFolder);
             copyJar("spring.test.comp_2-0.0.1", tempFolder);
@@ -52,6 +53,7 @@ public class DefaultComponentLoaderTest {
             copyJar("spring.test.comp_5-0.0.1", tempFolder);
             copyJar("spring.test.comp_6-0.0.1", tempFolder);
             copyJar("spring.test.comp_7-0.0.1", tempFolder);
+            copyJar("spring.test.comp_8-0.0.1", tempFolder);
         }
 
     }
@@ -270,7 +272,6 @@ public class DefaultComponentLoaderTest {
      * @throws Exception Any Exception
      */
     @Test
-    @Ignore("Todo fix this case")
     public void testScanComponents() throws Exception {
         target = repository.resolveComponent("spring.test.comp_7-0.0.1");
         PomClassRealm realm = world.newRealm(target);
@@ -278,10 +279,26 @@ public class DefaultComponentLoaderTest {
         Assert.assertTrue(loader.isLoaded(target));
         ApplicationContext context = loader.getApplicationFeature(target);
         Assert.assertNotNull(context);
-        Class suClass = realm.loadClass("spring.test.scan.User");
+        Class suClass = realm.loadClass("spring.test.scan_u.User");
         Object user = context.getBean(suClass);
         String message = (String) invokeWork(user);
         Assert.assertEquals("Work by provider: 1/1", message);
+    }
+
+    /**
+     * <dl>
+     * <dt>Purpose:</dt>
+     * <dd>存在范围依赖的组件可以被加载</dd>
+     * </dl>
+     *
+     * @throws Exception Any Exception
+     */
+    @Test
+    public void testLoadComponentWithRangeDependent() throws Exception{
+        target = repository.resolveComponent("spring.test.comp_8-0.0.1");
+        Assert.assertNotNull(target);
+        Component depended = repository.resolveComponent("spring.test.comp_6-0.0.1");
+        target.getDependedComponents().contains(depended);
     }
 
     private static void createPom(String folder, String compName, File root) throws IOException {

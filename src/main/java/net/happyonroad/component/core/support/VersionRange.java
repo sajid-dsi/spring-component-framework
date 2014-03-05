@@ -16,14 +16,13 @@ import java.util.List;
 /**
  * 从Maven中copy来的VersionRange
  */
-@SuppressWarnings("unchecked unused")
 public class VersionRange
 {
     private final ComponentVersion recommendedVersion;
 
-    private final List restrictions;
+    private final List<Restriction> restrictions;
 
-    private VersionRange( ComponentVersion recommendedVersion, List restrictions )
+    private VersionRange( ComponentVersion recommendedVersion, List<Restriction> restrictions )
     {
         this.recommendedVersion = recommendedVersion;
         this.restrictions = restrictions;
@@ -34,18 +33,18 @@ public class VersionRange
         return recommendedVersion;
     }
 
-    public List getRestrictions()
+    public List<Restriction> getRestrictions()
     {
         return restrictions;
     }
     
     public VersionRange cloneOf()
     {
-        List copiedRestrictions = null;
+        List<Restriction> copiedRestrictions = null;
         
         if ( restrictions != null )
         {
-            copiedRestrictions = new ArrayList();
+            copiedRestrictions = new ArrayList<Restriction>();
             
             if ( !restrictions.isEmpty() )
             {
@@ -80,7 +79,7 @@ public class VersionRange
             return null;
         }
 
-        List restrictions = new ArrayList();
+        List<Restriction> restrictions = new ArrayList<Restriction>();
         String process = spec;
         ComponentVersion version = null;
         ComponentVersion upperBound = null;
@@ -166,7 +165,7 @@ public class VersionRange
 
             ComponentVersion version = new ComponentVersion( process );
 
-            restriction = new Restriction( version, lowerBoundInclusive, version, upperBoundInclusive );
+            restriction = new Restriction( version, true, version, true);
         }
         else
         {
@@ -201,6 +200,7 @@ public class VersionRange
 
     public static VersionRange createFromVersion( String version )
     {
+        //noinspection unchecked
         return new VersionRange( new ComponentVersion( version ), Collections.EMPTY_LIST );
     }
 
@@ -231,14 +231,13 @@ public class VersionRange
      * @throws NullPointerException if the specified <code>VersionRange</code> is 
      * <code>null</code>.
      */
-    public VersionRange restrict( VersionRange restriction )
-    {
-        List r1 = this.restrictions;
-        List r2 = restriction.restrictions;
-        List restrictions;
+    public VersionRange restrict( VersionRange restriction ) throws OverConstrainedVersionException {
+        List<Restriction> r1 = this.restrictions;
+        List<Restriction> r2 = restriction.restrictions;
+        List<Restriction> restrictions;
         if ( r1.isEmpty() || r2.isEmpty() )
         {
-            restrictions = Collections.EMPTY_LIST;
+            restrictions = Collections.emptyList();
         }
         else
         {
@@ -279,19 +278,18 @@ public class VersionRange
             // original recommended version
             version = restriction.recommendedVersion;
         }
-/* TODO: should throw this immediately, but need Component
         else
         {
-            throw new OverConstrainedVersionException( "Restricting incompatible version ranges" );
+            //TODO: the component is null
+            throw new OverConstrainedVersionException( "Restricting incompatible version ranges", null );
         }
-*/
 
         return new VersionRange( version, restrictions );
     }
 
-    private List intersection( List r1, List r2 )
+    private List<Restriction> intersection( List r1, List r2 )
     {
-        List restrictions = new ArrayList( r1.size() + r2.size() );
+        List<Restriction> restrictions = new ArrayList<Restriction>( r1.size() + r2.size() );
         Iterator i1 = r1.iterator();
         Iterator i2 = r2.iterator();
         Restriction res1 = (Restriction) i1.next();
@@ -379,7 +377,7 @@ public class VersionRange
                     }
                     else if ( lowerInclusive && upperInclusive )
                     {
-                        restrictions.add( new Restriction( lower, lowerInclusive, upper, upperInclusive ) );
+                        restrictions.add( new Restriction( lower, true, upper, true) );
                     }
 
                     //noinspection ObjectEquality

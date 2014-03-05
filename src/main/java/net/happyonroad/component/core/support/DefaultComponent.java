@@ -569,11 +569,6 @@ public class DefaultComponent implements Component, SelfNaming {
     }
 
     @Override
-    public boolean meet(Dependency dependency) {
-        return dependency.accept(this);
-    }
-
-    @Override
     public String getManifestAttribute(String attributeName) {
         if (this.resource == null)
             return null;

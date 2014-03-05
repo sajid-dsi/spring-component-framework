@@ -228,7 +228,7 @@ public class DefaultComponentRepository implements MutableComponentRepository, S
         logger.trace("Finding   {}", dependency);
         List<Component> meets = new ArrayList<Component>();
         for (Component component : components) {
-            if (component.meet(dependency)) {/*dependency.accept(component)*/
+            if (dependency.accept(component)) {
                 meets.add(component);
             }
         }
@@ -237,7 +237,10 @@ public class DefaultComponentRepository implements MutableComponentRepository, S
         } else {
             logger.trace("Found     {} {} components", dependency, meets.size());
         }
-        //TODO 对所有满足的依赖进行排序，排序的原则是越新越好，越满足越好
+        //对所有满足的依赖进行排序
+        Collections.sort(meets);
+        //排序的原则是越高版本越好
+        Collections.reverse(meets);
         return meets;
     }
 
